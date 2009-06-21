@@ -56,6 +56,8 @@ void printerror(int errnum)
   if (errnum==EINTR) { printf("Receive interrupted by signal\n"); } else
   if (errnum==EFAULT) { printf("The receive buffer is outside the process address space\n"); } else
   if (errnum==EINVAL) { printf("Invalid argument passed\n"); } else
+  if (errnum==ENOPROTOOPT) { printf("Option not supported by the protocol\n"); } else
+  if (errnum==EDOM) { printf("Too big values to fit\n"); } else 
                       { printf("Unknown error %i ",errnum); }
   fflush(stdout);
 }
@@ -233,7 +235,7 @@ int ReceiveTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_s
 
              //READ DATA
              datawrite=fwrite(request.data,1,datarecv-4,filetotransmit); 
-             printf("Data2Write(%s)\n",request.data); fflush(stdout);
+             /*printf("Data2Write(%s)\n",request.data); fflush(stdout);*/
 
              if (datawrite!=512) { if ( ferror(filetotransmit) )
                                        {  printf("Error while writing file %s \n",filename);
@@ -243,7 +245,7 @@ int ReceiveTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_s
                                  }
 
              //SEND ACKNOWLEDGMENT
-             ++ackpacket.Block;  
+             ++ackpacket.Block;
 
              printf("Sending acknowledgement\n"); fflush(stdout);
              datatrans=sendto(server_sock,(const char*) & ackpacket,4,0,(struct sockaddr *)&client_sock,client_length);
@@ -282,6 +284,14 @@ int HandleClient(unsigned char * filename,int froml,struct sockaddr_in fromsock,
                      fflush(stdout);
                      exit(0);
                    }
+   //SET TIMEOUT FOR OPERTATIONS 
+   struct timeval timeout_time={0};
+   timeout_time.tv_sec=20;
+   int i=setsockopt(clsock,SOL_SOCKET,SO_RCVTIMEO,(struct timeval * ) & timeout_time, sizeof( struct timeval) );
+   if ( i!=0 ) { printf("Error setting receive Timeout for serving socket \n");  printerror(errno); }
+   i=setsockopt(clsock,SOL_SOCKET,SO_SNDTIMEO,(struct timeval * ) & timeout_time, sizeof( struct timeval) );
+   if ( i!=0 ) { printf("Error setting send Timeout for serving socket \n");  printerror(errno);  }
+   //SET TIMEOUT FOR OPERTATIONS 
 
 
    length = sizeof(server);
@@ -434,6 +444,14 @@ int TFTPClient(char * server_ip,unsigned int port,char * filename,int operation)
 
    sock= socket(AF_INET, SOCK_DGRAM, 0);
    if (sock < 0) error("Could not open socket for TFTP connection");
+
+   struct timeval timeout_time;
+   timeout_time.tv_sec=20;
+   int i=setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(struct timeval * ) & timeout_time, sizeof( struct timeval) );
+   if ( i!=0 ) { printf("Error setting receive Timeout for client socket \n"); printerror(errno); }
+   i=setsockopt(sock,SOL_SOCKET,SO_SNDTIMEO,(struct timeval * ) & timeout_time, sizeof( struct timeval) );
+   if ( i!=0 ) { printf("Error setting send Timeout for client socket \n");  printerror(errno);  }
+ 
 
    server.sin_family = AF_INET;
    hp = gethostbyname(server_ip);
