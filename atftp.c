@@ -35,7 +35,7 @@ usage ()
   printf ("atftp -r filename address port \t- read filename from address @ port \n");
   printf ("atftp -w filename address port \t- write filename to address @ port \n");
   printf ("\nUsage for TFTP server : \n");
-  printf ("atftp -s address port \t- begin tftp server binded @ address|port\n");
+  printf ("atftp -s port \t- begin tftp server binded @ address|port\n");
 }
 
 void
@@ -91,7 +91,7 @@ main (int argc, char *argv[])
   }
   else if (strcmp (ARG_START_SERVR, argv[1]) == 0)
   {
-      serverMode (argv[3] == NULL ? 0 : atoi (argv[3]));
+      serverMode (argv[2] == NULL ? 0 : atoi (argv[2]));
   }
   else
   {
