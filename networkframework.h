@@ -39,9 +39,8 @@
 #define ARG_WRITE "-w"
 #define ARG_START_SERVR "-s"
 
-enum client_mode
-{
-  READ, WRITE
+enum client_mode {
+    READ, WRITE
 };
 
 struct TFTP_PACKET // <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
@@ -50,15 +49,13 @@ struct TFTP_PACKET // <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
     char data[514];
 };
 
-struct DATA_TFTP_PACKET 
-{
+struct DATA_TFTP_PACKET {
     unsigned char Op1, Op2;
     unsigned short Block;
     char data[512];
 };
 
-struct ACK_TFTP_PACKET 
-{
+struct ACK_TFTP_PACKET {
     unsigned char Op1, Op2;
     unsigned short Block;
     char data[512];
