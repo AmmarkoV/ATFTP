@@ -35,6 +35,7 @@
 #include <sys/uio.h> 
 
 #define DEF_SERV_PORT 69
+#define MAX_FAILED_RETRIES 10
 #define ARG_READ "-r"
 #define ARG_WRITE "-w"
 #define ARG_START_SERVR "-s"

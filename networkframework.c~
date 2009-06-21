@@ -138,7 +138,7 @@ ReceiveNullACK(int server_sock, struct sockaddr_in client_sock, int client_lengt
   // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
   int datarecv, retransmit_attempts = 1;
-  while ((retransmit_attempts != 0) && (retransmit_attempts < 30))
+  while ((retransmit_attempts != 0) && (retransmit_attempts < MAX_FAILED_RETRIES))
   {
       printf("Waiting to receive null acknowledgement\n");
       fflush(stdout);
@@ -219,7 +219,8 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_soc
 
       filepos = 0;
       datatrans = 0;
-      while ((filepos < filesize) || (retransmit_attempts != 0) || ((filepos >= filesize) && (dataread == 512)))
+      while ((filepos < filesize) || ( (retransmit_attempts != 0) && (retransmit_attempts < MAX_FAILED_RETRIES ) ) 
+                                  || ((filepos >= filesize) && (dataread == 512)))
       {
 
           //ORIAKI PERIPTWSI POU TO TELEYTAIO MINIMA EINAI 512Byte
@@ -236,8 +237,7 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_soc
 
 
           if (retransmit_attempts == 0)
-          {// RETRANSMITTING SAME PACKET
->>>>>>> origin/master:networkframework.c
+          {   // RETRANSMITTING SAME PACKET
               //READ DATA APO TO TOPIKO ARXEIO
               dataread = fread(request.data, 1, 512, filetotransmit);
 
