@@ -156,6 +156,18 @@ int TransmitTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_
 
            }
 
+             datarecv=recvfrom(server_sock,(char*) & ackpacket,4,0,(struct sockaddr *)&client_sock,&client_length);
+             if (datarecv < 0) {
+                                 printf("Error while receiving FINAL acknowledgement for file %s \n",filename);
+                                 printerror(errno);
+                                 fclose(filetotransmit);
+                                 return 1;
+                                }  else
+                                {
+                                 printf("Received FINAL acknowledgement for block %u \n",ackpacket.Block); 
+                                }
+
+
        fclose(filetotransmit);
     } else
     {

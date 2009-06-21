@@ -219,7 +219,7 @@ int ReceiveTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_s
                                  return 1;
                                 } else 
                                 { printf("Received %u bytes from socket ",datarecv);
-                                
+                                  request.data[datarecv-4]=0;
                                 }
              if ( datarecv<sizeof(request) ) { reachedend=1;
                                                printf("This should be the last packet \n");
