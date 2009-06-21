@@ -148,7 +148,8 @@ int TransmitTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_
            {
 
             //ORIAKI PERIPTWSI POU TO TELEYTAIO MINIMA EINAI 512Byte
-            if ( (filepos>=filesize) && (dataread==512) ) { 
+            if ( (filepos>=filesize) && (dataread==512) && ( retransmit_attempts!=0 ) ) 
+                                                          { 
                                                             printf("Last message is 512 characters so Recepient won`t be able to stop \n");
                                                             printf("Sending a zero data \n"); 
                                                             dataread=0; retransmit_attempts=1;
