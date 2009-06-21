@@ -175,63 +175,7 @@ ReceiveNullACK(int server_sock, struct sockaddr_in client_sock, int client_lengt
 
 int
 TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_sock, int client_length)
-{
-<<<<<<< HEAD:networkframework.c
-   printf("TransmitTFTPFile ( Opening local file for read ) called\n");
-   printf("TransmitTFTPFile to port %u \n",ntohs(client_sock.sin_port));
-   FILE *filetotransmit;
-   filetotransmit=fopen(filename,"rb");
-   
-   unsigned int retransmit_attempts=0;
-   if (filetotransmit!=NULL)
-    {
-       //FILE CAN BE OPENED , CHECK FILE SIZE
-       unsigned int filesize=0,filepos=0,dataread=0,datarecv=0,datatrans=0;
-       fseek(filetotransmit,0,SEEK_END);
-       filesize=ftell(filetotransmit);
-       rewind(filetotransmit);
-
-       printf("Requested file ( %s ) for transmission has %u bytes size!\n",filename,filesize);
-       if ( filesize % 512 == 0 ) { printf("File size is a multiple of 512 should append a zero data package \n"); }
-       //FILE SIZE OK
-        // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        struct ACK_TFTP_PACKET ackpacket;
-        //          2 bytes   2 bytes
-        // ACK    | opcode | block # 
-        //            A         B
-        /* A part */ ackpacket.Op1=0; ackpacket.Op2=4;
-        /* B part */ ackpacket.Block=0;
-        // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-        // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        struct DATA_TFTP_PACKET request;
-        //          2 bytes   2 bytes    n bytes
-        // DATA   | opcode | block # |  Data
-        //            A         B         C
-        /* A part */ request.Op1=0; request.Op2=3;
-        /* B part */ request.Block=0;
-        /* C part */ request.data[0]=0;
-        // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-        filepos=0; datatrans=0;
-        while ( (filepos<filesize) || (retransmit_attempts!=0) || (  (filepos>=filesize) && (dataread==512)  ) )
-           {
-
-            //ORIAKI PERIPTWSI POU TO TELEYTAIO MINIMA EINAI 512Byte
-            if ( (filepos>=filesize) && (dataread==512) && ( retransmit_attempts!=0 ) ) 
-                                                          { 
-                                                            printf("Last message is 512 characters so Recepient won`t be able to stop \n");
-                                                            printf("Sending a zero data \n"); 
-                                                            dataread=0; retransmit_attempts=1;
-                                                            request.data[0]=0;
-                                                            ++request.Block;
-                                                          }
-            //ORIAKI PERIPTWSI POU TO TELEYTAIO MINIMA EINAI 512Byte
-
-
-            if (retransmit_attempts==0)
-             {// RETRANSMITTING SAME PACKET
-=======
+{ 
   printf("TransmitTFTPFile ( Opening local file for read ) called\n");
   printf("TransmitTFTPFile to port %u \n", ntohs(client_sock.sin_port));
   FILE *filetotransmit;
@@ -292,8 +236,7 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_soc
 
 
           if (retransmit_attempts == 0)
-          {// RETRANSMITTING SAME PACKET
->>>>>>> origin/master:networkframework.c
+          {// RETRANSMITTING SAME PACKET 
               //READ DATA APO TO TOPIKO ARXEIO
               dataread = fread(request.data, 1, 512, filetotransmit);
 
