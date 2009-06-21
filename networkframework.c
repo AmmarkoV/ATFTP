@@ -212,15 +212,15 @@ int ReceiveTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_s
             //RECEIVE DATA
              printf("Waiting to receive data\n"); fflush(stdout);
              datarecv=recvfrom(server_sock,(char*) & request,sizeof(request),0,(struct sockaddr *)&client_sock,&client_length);
-             //unsigned char buf[512]; datarecv=recvfrom(server_sock,buf,512,0,(struct sockaddr *)&client_sock,client_length);
              if (datarecv < 0) {
                                  printf("Error while receiving file %s \n",filename);
                                  printerror(errno);
                                  fclose(filetotransmit);
                                  return 1;
-                                } else
-                                 // 516 giati exoume 512byte data , 2 byte Op kai 2 byte block#
-             printf("Received %u bytes from socket ",datarecv);
+                                } else 
+                                { printf("Received %u bytes from socket ",datarecv);
+                                  request.data[datarecv-4]=0;
+                                }
              if ( datarecv<sizeof(request) ) { reachedend=1;
                                                printf("This should be the last packet \n");
                                              }
