@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Ammar Qammaz   *
- *   ammarkov@gmail.com   *
+ *   Copyright (C) 2009 by Ammar Qammaz, Ivan kanakarakis                  *
+ *   ammarkov@gmail.com                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -45,20 +45,20 @@ enum client_mode
   READ, WRITE
 };
 
-struct TFTP_PACKET // <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
+struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
 {
   unsigned char Op1, Op2;
   char data[514];
 };
 
-struct DATA_TFTP_PACKET
+struct DATA_TFTP_PACKET //  <- GIA DATA PAKETA 
 {
   unsigned char Op1, Op2;
   unsigned short Block;
   char data[512];
 };
 
-struct ACK_TFTP_PACKET
+struct ACK_TFTP_PACKET //  <- GIA ACKNOWLEDGMENT PAKETA 
 {
   unsigned char Op1, Op2;
   unsigned short Block;
@@ -68,7 +68,7 @@ struct ACK_TFTP_PACKET
 unsigned int MINDATAPORT;
 unsigned int MAXDATAPORT;
 
-int TFTPServer (unsigned int port);
-int TFTPClient (char * server, unsigned int port, char * filename, int operation);
+int TFTPServer(unsigned int port);
+int TFTPClient(char * server, unsigned int port, char * filename, int operation);
 
 #endif
