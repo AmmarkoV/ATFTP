@@ -122,7 +122,7 @@ int TransmitTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_
             { // OTAN EIMASTE STO FILEPOSITION 0 DEN PERIMENOUME AKOMA ACKNOWLEDGMENT  
              printf("Waiting to receive acknowledgement\n"); fflush(stdout);
              //RECEIVE ACKNOWLEDGMENT!
-             datarecv=recvfrom(server_sock,(const char*) & ackpacket,4,0,(struct sockaddr *)&client_sock,client_length);
+             datarecv=recvfrom(server_sock,(char*) & ackpacket,4,0,(struct sockaddr *)&client_sock,&client_length);
              if (datarecv < 0) {
                                  printf("Error while receiving acknowledgement for file %s \n",filename);
                                  printerror(errno);
@@ -211,8 +211,8 @@ int ReceiveTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_s
 
             //RECEIVE DATA
              printf("Waiting to receive data\n"); fflush(stdout);
-             datarecv=recvfrom(server_sock,(char*) & request,sizeof(request),0,(struct sockaddr *)&client_sock,client_length);
-             //unsigned char buf[512]; datarecv=recvfrom(server_sock,buf,512,0,&client_sock,client_length);
+             datarecv=recvfrom(server_sock,(char*) & request,sizeof(request),0,(struct sockaddr *)&client_sock,&client_length);
+             //unsigned char buf[512]; datarecv=recvfrom(server_sock,buf,512,0,(struct sockaddr *)&client_sock,client_length);
              if (datarecv < 0) {
                                  printf("Error while receiving file %s \n",filename);
                                  printerror(errno);
@@ -360,7 +360,7 @@ int TFTPServer(unsigned int port)
 
    if (bind(sock,(struct sockaddr *)&server,length)<0)  error("binding master port for atftp!");
    fromlen = sizeof(struct sockaddr_in);
-   unsigned char filename[512];
+   char filename[512];
 
    unsigned int newport,fork_res,packeterror=0;
    while (1) {
@@ -368,7 +368,7 @@ int TFTPServer(unsigned int port)
                struct TFTP_PACKET request={0};
  
                printf("\nWaiting for client\n");
-               n=recvfrom(sock,(const char*) & request,sizeof(request),0,(struct sockaddr *)&from,&fromlen);
+               n=recvfrom(sock,(char*) & request,sizeof(request),0,(struct sockaddr *)&from,&fromlen);
                if (n < 0) error("recvfrom");
 
                packeterror=0;

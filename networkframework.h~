@@ -41,7 +41,7 @@ struct ACK_TFTP_PACKET
     unsigned short Block; 
     unsigned char data[512];
 };
- 
+
 
 
 unsigned int MINDATAPORT;

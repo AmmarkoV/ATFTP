@@ -25,21 +25,21 @@
 struct TFTP_PACKET // <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
 {
     unsigned char Op1,Op2;
-    unsigned char data[514];
+    char data[514];
 };
 
 struct DATA_TFTP_PACKET
 {
     unsigned char Op1,Op2;
     unsigned short Block;
-    unsigned char data[512];
+    char data[512];
 };
 
 struct ACK_TFTP_PACKET
 {
     unsigned char Op1,Op2;
     unsigned short Block; 
-    unsigned char data[512];
+    char data[512];
 };
 
 
