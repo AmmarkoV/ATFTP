@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Ammar Qammaz , Ivan kanakarakis  *
+ *   Copyright (C) 2009 by Ammar Qammaz, Ivan kanakarakis  *
  *   ammarkov@gmail.com   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -28,15 +28,14 @@
 void
 usage()
 {
-
-  printf ("-----------------------------------------------------\n");
-  printf ("A-TFTP 0.10 - for info see :\t http://62.103.22.50 \n");
-  printf ("-----------------------------------------------------\n");
-  printf ("Usage for TFTP client : \n");
-  printf ("atftp -r filename address port \t- read filename from address @ port \n");
-  printf ("atftp -w filename address port \t- write filename to address @ port \n");
-  printf ("\nUsage for TFTP server : \n");
-  printf ("atftp -s port \t- begin tftp server binded @ address|port\n");
+  printf("-----------------------------------------------------\n");
+  printf("A-TFTP 0.10 - for info see :\t http://62.103.22.50 \n");
+  printf("-----------------------------------------------------\n");
+  printf("Usage for TFTP client : \n");
+  printf("atftp -r filename address port \t- read filename from address @ port \n");
+  printf("atftp -w filename address port \t- write filename to address @ port \n");
+  printf("\nUsage for TFTP server : \n");
+  printf("atftp -s port \t- begin tftp server binded @ address|port\n");
 }
 
 void

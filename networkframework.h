@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Ammar Qammaz   *
+ *   Copyright (C) 2009 by Ammar Qammaz, Ivan kanakarakis  *
  *   ammarkov@gmail.com   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -13,7 +13,7 @@
  *   GNU General Public License for more details.                          *
  *                                                                         *
  *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
+ *   along with this program; if not, write to the    out                     *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
@@ -67,7 +67,7 @@ struct ACK_TFTP_PACKET
 unsigned int MINDATAPORT;
 unsigned int MAXDATAPORT;
 
-int TFTPServer (unsigned int port);
-int TFTPClient (char * server, unsigned int port, char * filename, int operation);
+int TFTPServer(unsigned int port);
+int TFTPClient(char * server, unsigned int port, char * filename, int operation);
 
 #endif

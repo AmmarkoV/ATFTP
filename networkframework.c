@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Ammar Qammaz Ivan Kanakarakis  *
+ *   Copyright (C) 2009 by Ammar Qammaz, Ivan kanakarakis  *
  *   ammarkov@gmail.com   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -13,10 +13,11 @@
  *   GNU General Public License for more details.                          *
  *                                                                         *
  *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
+ *   along with this program; if not, write to the    out                     *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+
 #include "networkframework.h"
 
 unsigned int MINDATAPORT = 30000;
@@ -175,7 +176,7 @@ ReceiveNullACK(int server_sock, struct sockaddr_in client_sock, int client_lengt
 
 int
 TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_sock, int client_length)
-{ 
+{
   printf("TransmitTFTPFile ( Opening local file for read ) called\n");
   printf("TransmitTFTPFile to port %u \n", ntohs(client_sock.sin_port));
   FILE *filetotransmit;
