@@ -44,7 +44,7 @@ enum client_mode
   READ, WRITE
 };
 
-struct TFTP_PACKET // <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
+struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
 {
   unsigned char Op1, Op2;
   char data[514];
