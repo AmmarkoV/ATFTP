@@ -158,6 +158,7 @@ int TransmitTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_
                                 }  else
                                 {
                                  printf("Received acknowledgement for block %u \n",ackpacket.Block);
+                                 if ( ackpacket.Block!=request.Block ) { printf("\n\nOut of sync acknowledge.!\n\n"); }
                                  retransmit_attempts=0;
                                 }
              }
@@ -445,7 +446,7 @@ int TFTPClient(char * server_ip,unsigned int port,char * filename,int operation)
    sock= socket(AF_INET, SOCK_DGRAM, 0);
    if (sock < 0) error("Could not open socket for TFTP connection");
 
-   struct timeval timeout_time;
+   struct timeval timeout_time={0};
    timeout_time.tv_sec=20;
    int i=setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(struct timeval * ) & timeout_time, sizeof( struct timeval) );
    if ( i!=0 ) { printf("Error setting receive Timeout for client socket \n"); printerror(errno); }

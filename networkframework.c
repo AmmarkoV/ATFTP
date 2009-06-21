@@ -52,7 +52,7 @@ void printerror(int errnum)
   if (errnum==ECONNREFUSED) { printf("A remote host refused to allow the network connection\n"); } else
   if (errnum==ENOTCONN) { printf("The socket is associated with a connection oriented protocol and is not connected\n"); } else
   if (errnum==ENOTSOCK) { printf("The argument s does not refer to a socket\n"); } else
-  if (errnum==EAGAIN) { printf("The socket is marked non-blocking and the op would block or timeout expired\n"); } else
+  if (errnum==EAGAIN) { printf("Timeout expired / The socket is marked non-blocking and the op would block \n"); } else
   if (errnum==EINTR) { printf("Receive interrupted by signal\n"); } else
   if (errnum==EFAULT) { printf("The receive buffer is outside the process address space\n"); } else
   if (errnum==EINVAL) { printf("Invalid argument passed\n"); } else
@@ -158,6 +158,7 @@ int TransmitTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_
                                 }  else
                                 {
                                  printf("Received acknowledgement for block %u \n",ackpacket.Block);
+                                 if ( ackpacket.Block!=request.Block ) { printf("\n\nOut of sync acknowledge.!\n\n"); }
                                  retransmit_attempts=0;
                                 }
              }
