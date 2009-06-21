@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Ammar Qammaz   *
+ *   Copyright (C) 2009 by Ammar Qammaz , Ivan kanakarakis  *
  *   ammarkov@gmail.com   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -22,45 +22,80 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
- 
-#include "networkframework.h" 
-#include <string.h>
 
+#include "networkframework.h"
 
-int main(int argc, char *argv[])
+void
+usage ()
 {
-  printf("A-TFTP 0.07 - for info  http://62.103.22.50 \n");
-  printf("-----------------------------------------------------\n");
-  if (argc <= 2) { printf("Parameter error , you provided %u/3 parameters \nFor TFTP client , usage can be : \n",argc-1);
-                  printf("atftp -r filename address port ( read filename from address @ port )\n");
-                  printf("atftp -w filename address port ( write filename to address @ port )\n");
-                  printf("\nFor TFTP server , usage can be : \n");
-                  printf("atftp -s address port ( begin tftp server binded @ address/port )\n");
-                  return 1;
-                }
- 
-
-  if ((strcmp("-r",argv[1])==0)||(strcmp("-w",argv[1])==0)) 
-                    {
-                      if (argc <= 4) { 
-                                      printf("Parameter error, you provided %u/4 parameters for client mode \n",argc-1);
-                                      printf("For TFTP client usage can be : \n");
-                                      printf("atftp -r filename address port ( read filename from address @ port )\n");
-                                      printf("atftp -w filename address port ( write filename to address @ port )\n");
-                                      return 1;
-                                    }
-                      printf("Starting TFTP Client.. \n");
-                      if (strcmp("-r",argv[1])==0) { TFTPClient(argv[3],atoi(argv[4]),argv[2],1); } else
-                      if (strcmp("-w",argv[1])==0) { TFTPClient(argv[3],atoi(argv[4]),argv[2],2); }
-                    } else
-  if (strcmp("-s",argv[1])==0) 
-                    {
-                      printf("Starting TFTP Server at port %u .. \n",atoi(argv[3]));
-                      TFTPServer(atoi(argv[3]));
-                     }
-
-  printf("\n");
-  
-  return 0;
+  printf ("-----------------------------------------------------\n");
+  printf ("A-TFTP 0.08 - for info see :\t http://62.103.22.50 \n");
+  printf ("-----------------------------------------------------\n");
+  printf ("Usage for TFTP client : \n");
+  printf ("atftp -r filename address port \t- read filename from address @ port \n");
+  printf ("atftp -w filename address port \t- write filename to address @ port \n");
+  printf ("\nUsage for TFTP server : \n");
+  printf ("atftp -s address port \t- begin tftp server binded @ address|port\n");
 }
 
+void
+paramErr (unsigned npar)
+{
+  printf ("Parameter error, too little parameters (%u)\n\n", npar);
+  usage ();
+}
+
+void
+clientMode (int mode, char* arg2, char* arg3, char* arg4)
+{
+  printf ("Starting TFTP Client.. \n\n");
+  TFTPClient (arg3, atoi (arg4), arg2, mode);
+}
+
+void
+serverMode (unsigned servr_port)
+{
+  if (!servr_port)
+  {
+      printf ("No port specified, default to port %u\n", DEF_SERV_PORT);
+      servr_port = DEF_SERV_PORT;
+  }
+  printf ("Starting TFTP Server at port %u .. \n\n", servr_port);
+  TFTPServer (servr_port);
+}
+
+int
+main (int argc, char *argv[])
+{
+  if (argc < 2)
+  {
+      usage ();
+  }
+  else if (strcmp (ARG_READ, argv[1]) == 0)
+  {
+      if (argc <= 4)
+      {
+          paramErr (argc - 1);
+          return EXIT_FAILURE;
+      }
+      clientMode (READ, argv[2], argv[3], argv[4]);
+  }
+  else if (strcmp (ARG_WRITE, argv[1]) == 0)
+  {
+      if (argc <= 4)
+      {
+          paramErr (argc - 1);
+          return EXIT_FAILURE;
+      }
+      clientMode (WRITE, argv[2], argv[3], argv[4]);
+  }
+  else if (strcmp (ARG_START_SERVR, argv[1]) == 0)
+  {
+      serverMode (argv[3] == NULL ? 0 : atoi (argv[3]));
+  }
+  else
+  {
+      usage ();
+  }
+  return EXIT_SUCCESS;
+}

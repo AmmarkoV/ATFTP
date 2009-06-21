@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Ammar Qammaz   *
+ *   Copyright (C) 2009 by Ammar Qammaz Ivan Kanakarakis  *
  *   ammarkov@gmail.com   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -276,7 +276,7 @@ int ReceiveTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_s
                                    printerror(errno);
                                    fclose(filetotransmit);
                                    return 1;
-                                } else 
+                                } else
                                 {
                                    printf("Received %u bytes from socket ",datarecv);
                                    request.data[datarecv-4]=0;

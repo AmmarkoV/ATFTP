@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Ammar Qammaz   *
+ *   Copyright (C) 2009 by Ammar Qammaz Ivan Kanakarakis  *
  *   ammarkov@gmail.com   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -18,17 +18,6 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #include "networkframework.h"
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <stdio.h>
-#include	<stdlib.h>
-#include	<strings.h>
-#include	<errno.h>
-#include <unistd.h>
-#include <sys/uio.h> 
 
 unsigned int MINDATAPORT=30000;
 unsigned int MAXDATAPORT=35000;
