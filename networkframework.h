@@ -46,28 +46,28 @@ enum client_mode
 
 struct TFTP_PACKET // <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
 {
-    unsigned char Op1, Op2;
-    char data[514];
+  unsigned char Op1, Op2;
+  char data[514];
 };
 
-struct DATA_TFTP_PACKET 
+struct DATA_TFTP_PACKET
 {
-    unsigned char Op1, Op2;
-    unsigned short Block;
-    char data[512];
+  unsigned char Op1, Op2;
+  unsigned short Block;
+  char data[512];
 };
 
-struct ACK_TFTP_PACKET 
+struct ACK_TFTP_PACKET
 {
-    unsigned char Op1, Op2;
-    unsigned short Block;
-    char data[512];
+  unsigned char Op1, Op2;
+  unsigned short Block;
+  char data[512];
 };
 
 unsigned int MINDATAPORT;
 unsigned int MAXDATAPORT;
 
-int TFTPServer(unsigned int port);
-int TFTPClient(char * server, unsigned int port, char * filename, int operation);
+int TFTPServer (unsigned int port);
+int TFTPClient (char * server, unsigned int port, char * filename, int operation);
 
 #endif

@@ -26,8 +26,9 @@
 #include "networkframework.h"
 
 void
-usage ()
+usage()
 {
+<<<<<<< HEAD:atftp.c
   printf ("-----------------------------------------------------\n");
   printf ("A-TFTP 0.10 - for info see :\t http://62.103.22.50 \n");
   printf ("-----------------------------------------------------\n");
@@ -36,66 +37,76 @@ usage ()
   printf ("atftp -w filename address port \t- write filename to address @ port \n");
   printf ("\nUsage for TFTP server : \n");
   printf ("atftp -s port \t- begin tftp server binded @ address|port\n");
+=======
+  printf("-----------------------------------------------------\n");
+  printf("A-TFTP 0.09 - for info see :\t http://62.103.22.50 \n");
+  printf("-----------------------------------------------------\n");
+  printf("Usage for TFTP client : \n");
+  printf("atftp -r filename address port \t- read filename from address @ port \n");
+  printf("atftp -w filename address port \t- write filename to address @ port \n");
+  printf("\nUsage for TFTP server : \n");
+  printf("atftp -s port \t- begin tftp server binded @ port\n");
+>>>>>>> origin/master:atftp.c
 }
 
 void
-paramErr (unsigned npar)
+paramErr(unsigned npar)
 {
-  printf ("Parameter error, too little parameters (%u)\n\n", npar);
-  usage ();
+  printf("Parameter error, too little parameters (%u)\n\n", npar);
+  usage();
 }
 
 void
-clientMode (int mode, char* arg2, char* arg3, char* arg4)
+clientMode(int mode, char* arg2, char* arg3, char* arg4)
 {
-  printf ("Starting TFTP Client.. \n\n");
-  TFTPClient (arg3, atoi (arg4), arg2, mode);
+  printf("Starting TFTP Client.. \n\n");
+  TFTPClient(arg3, atoi(arg4), arg2, mode);
 }
 
 void
-serverMode (unsigned servr_port)
+serverMode(unsigned servr_port)
 {
   if (!servr_port)
   {
-      printf ("No port specified, default to port %u\n", DEF_SERV_PORT);
+      printf("No port specified, default to port %u\n", DEF_SERV_PORT);
       servr_port = DEF_SERV_PORT;
   }
-  printf ("Starting TFTP Server at port %u .. \n\n", servr_port);
-  TFTPServer (servr_port);
+  printf("Starting TFTP Server at port %u .. \n\n", servr_port);
+  TFTPServer(servr_port);
 }
 
 int
-main (int argc, char *argv[])
+main(int argc, char *argv[])
 {
   if (argc < 2)
   {
-      usage ();
+      usage();
   }
-  else if (strcmp (ARG_READ, argv[1]) == 0)
+  else if (strcmp(ARG_READ, argv[1]) == 0)
   {
       if (argc <= 4)
       {
-          paramErr (argc - 1);
+          paramErr(argc - 1);
           return EXIT_FAILURE;
       }
-      clientMode (READ, argv[2], argv[3], argv[4]);
+      clientMode(READ, argv[2], argv[3], argv[4]);
   }
-  else if (strcmp (ARG_WRITE, argv[1]) == 0)
+  else if (strcmp(ARG_WRITE, argv[1]) == 0)
   {
       if (argc <= 4)
       {
-          paramErr (argc - 1);
+          paramErr(argc - 1);
           return EXIT_FAILURE;
       }
-      clientMode (WRITE, argv[2], argv[3], argv[4]);
+      clientMode(WRITE, argv[2], argv[3], argv[4]);
   }
-  else if (strcmp (ARG_START_SERVR, argv[1]) == 0)
+  else if (strcmp(ARG_START_SERVR, argv[1]) == 0)
   {
-      serverMode (argv[2] == NULL ? 0 : atoi (argv[2]));
+      serverMode(argv[2] == NULL ? 0 : atoi(argv[2]));
   }
   else
   {
-      usage ();
+      usage();
   }
   return EXIT_SUCCESS;
 }
