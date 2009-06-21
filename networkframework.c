@@ -69,7 +69,7 @@ int OpCodeValidTFTP(unsigned char op1,unsigned char op2)
 int TransmitTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_sock,int client_length)
 {
    printf("TransmitTFTPFile ( Opening local file for read ) called\n");
-   printf("TransmitTFTPFile from port %u \n",ntohs(client_sock.sin_port));
+   printf("TransmitTFTPFile to port %u \n",ntohs(client_sock.sin_port));
    FILE *filetotransmit;
    filetotransmit=fopen(filename,"rb");
    if (filetotransmit!=NULL)
@@ -399,8 +399,8 @@ int TFTPClient(char * server_ip,unsigned int port,char * filename,int operation)
 {
    if ( (operation!=2) && (operation!=1) ) { printf("Wrong Client Operation \n"); return 1; }
    if ( strlen(filename)<=0 ) { printf("Wrong filename \n"); return 1; }
-   int sock, length, n;
-   struct sockaddr_in server, from;
+   int sock, length, n ;
+   struct sockaddr_in server;
    struct hostent *hp;
 
 
@@ -417,9 +417,31 @@ int TFTPClient(char * server_ip,unsigned int port,char * filename,int operation)
    length=sizeof(struct sockaddr_in);
 
 
+ // BIND CODE
+   int bindres;
+   unsigned int cl_port=MINDATAPORT;
+   struct sockaddr_in from;
+   bzero(&from,length);
+   from.sin_family=AF_INET;
+   from.sin_addr.s_addr=INADDR_ANY;
 
+   while  ( cl_port < MAXDATAPORT )
+        { from.sin_port=htons(cl_port);
+          bindres=bind(sock,(struct sockaddr *)&from,length); 
+          if (bindres < 0) { printf("Binding port number %u is not availiable \n",cl_port); 
+                             ++cl_port;
+                           } else
+                           { printf("Binding to port number %u is OK \n",cl_port);
+                             break;
+                           }
+        } 
 
+    if (cl_port>=MAXDATAPORT) { printf("Unable to handle client  ( could not find free port ).. :( \n");
+                                fflush(stdout);
+                                exit(0); }
+// BIND CODE
 
+   
    // MAKE TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
    struct TFTP_PACKET request;
    //             2 bytes              1 byte         1byte
@@ -446,13 +468,14 @@ int TFTPClient(char * server_ip,unsigned int port,char * filename,int operation)
    //Mexri edw exoume steilei i RRQ , i WRQ to opoio einai sigouro..
 
 
+  // Vazoume from anti server giati o server einai i socket pros to port 69 , to from einai to 2o port
    if (operation==1) // READ OPERATION
      {
-       ReceiveTFTPFile(filename,sock,server,length); 
+       ReceiveTFTPFile(filename,sock,from,length);
      } else
    if (operation==2) // WRITE OPERATION
      {
-       TransmitTFTPFile(filename,sock,server,length);
+       TransmitTFTPFile(filename,sock,from,length);
      }
 
    printf("Stopping TFTP client..\n");
