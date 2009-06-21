@@ -86,6 +86,8 @@ int TransmitTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_
    printf("TransmitTFTPFile to port %u \n",ntohs(client_sock.sin_port));
    FILE *filetotransmit;
    filetotransmit=fopen(filename,"rb");
+   
+   unsigned int retransmit_attempts=0;
    if (filetotransmit!=NULL)
     {
        //FILE CAN BE OPENED , CHECK FILE SIZE
@@ -116,45 +118,50 @@ int TransmitTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_
         // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
         filepos=0; datatrans=0;
-        while (filepos<filesize)
+        while ( (filepos<filesize) || (retransmit_attempts!=0) )
            {
-           if (filepos>0)
-            { // OTAN EIMASTE STO FILEPOSITION 0 DEN PERIMENOUME AKOMA ACKNOWLEDGMENT  
-             printf("Waiting to receive acknowledgement\n"); fflush(stdout);
-             //RECEIVE ACKNOWLEDGMENT!
-             datarecv=recvfrom(server_sock,(char*) & ackpacket,4,0,(struct sockaddr *)&client_sock,&client_length);
-             if (datarecv < 0) {
-                                 printf("Error while receiving acknowledgement for file %s \n",filename);
-                                 printerror(errno);
-                                 fclose(filetotransmit);
-                                 return 1;
-                                }  else
-                                {
-                                 printf("Received acknowledgement for block %u \n",ackpacket.Block); 
-                                }
-            }
 
-             //READ DATA APO TO TOPIKO ARXEIO
-             dataread=fread(request.data,1,512,filetotransmit); 
+            if (retransmit_attempts==0)
+             { // RETRANSMITTING SAME PACKET
+              //READ DATA APO TO TOPIKO ARXEIO
+              dataread=fread(request.data,1,512,filetotransmit);
 
-             if (dataread!=512) { if ( ferror(filetotransmit) )
+              if (dataread!=512) { if ( ferror(filetotransmit) )
                                        {  printf("Error while reading file %s \n",filename);
                                           fclose(filetotransmit);
                                           return 1; }
                                 }
 
-             //SEND DATA STO ALLO MELLOS TOU SESSION
-             ++request.Block;
-             filepos+=dataread;
-
+              //SEND DATA STO ALLO MELLOS TOU SESSION
+              ++request.Block;
+              filepos+=dataread;
+             }  // RETRANSMITTING SAME PACKET
  
-             printf("Sending data\n"); fflush(stdout);
-             datatrans=sendto(server_sock,(const char*) & request,dataread+4,0,(struct sockaddr *)&client_sock,client_length);
-             if (datatrans < 0) { printf("Error while sending file %s ",filename);
-                                  fclose(filetotransmit);
-                                  return 1; }
+              printf("Sending data\n"); fflush(stdout);
+              datatrans=sendto(server_sock,(const char*) & request,dataread+4,0,(struct sockaddr *)&client_sock,client_length);
+              if (datatrans < 0) { printf("Error while sending file %s ",filename);
+                                   fclose(filetotransmit);
+                                   return 1; }
+
+              if (filepos>0)
+             { // OTAN EIMASTE STO FILEPOSITION 0 DEN PERIMENOUME AKOMA ACKNOWLEDGMENT  
+              printf("Waiting to receive acknowledgement\n"); fflush(stdout);
+              //RECEIVE ACKNOWLEDGMENT!
+              datarecv=recvfrom(server_sock,(char*) & ackpacket,4,0,(struct sockaddr *)&client_sock,&client_length);
+              if (datarecv < 0) {
+                                 printf("Error while receiving acknowledgement for file %s \n",filename);
+                                 printerror(errno);
+                                 ++retransmit_attempts;
+                                 return 1;
+                                }  else
+                                {
+                                 printf("Received acknowledgement for block %u \n",ackpacket.Block);
+                                 retransmit_attempts=0;
+                                }
+             }
 
            }
+
 
        fclose(filetotransmit);
     } else
@@ -202,8 +209,7 @@ int ReceiveTFTPFile(char * filename,int server_sock,struct sockaddr_in  client_s
         /* A part */ request.Op1=0; request.Op2=3;
         /* B part */ request.Block=0;
         /* C part */ request.data[0]=0;
-        // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        printf("Data packets size is %u ",sizeof(request));
+        // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
 
         filepos=0; datatrans=0; reachedend=0;
         while (reachedend==0)
