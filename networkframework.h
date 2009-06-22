@@ -41,7 +41,7 @@
 
 enum client_mode
 {
-  READ, WRITE
+  READ = 1, WRITE
 };
 
 struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
