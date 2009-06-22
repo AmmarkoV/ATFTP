@@ -51,14 +51,14 @@ struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
   char data[514];
 };
 
-struct DATA_TFTP_PACKET
+struct DATA_TFTP_PACKET //  <- GIA DATA PAKETA 
 {
   unsigned char Op1, Op2;
   unsigned short Block;
   char data[512];
 };
 
-struct ACK_TFTP_PACKET
+struct ACK_TFTP_PACKET //  <- GIA ACKNOWLEDGMENT PAKETA 
 {
   unsigned char Op1, Op2;
   unsigned short Block;
