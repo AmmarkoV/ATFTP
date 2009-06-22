@@ -192,7 +192,7 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_soc
       rewind(filetotransmit);
 
       printf("Requested file ( %s ) for transmission has %u bytes size!\n", filename, filesize);
-      if ( ( filesize % 512 == 0) && ( filesize!=0 ) )
+      if ((filesize % 512 == 0) && (filesize != 0))
       {
           printf("File size is a multiple of 512 should append a zero data package \n");
       }
@@ -220,8 +220,8 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_soc
 
       filepos = 0;
       datatrans = 0;
-      while ((filepos < filesize) || ( (retransmit_attempts != 0) && (retransmit_attempts < MAX_FAILED_RETRIES ) )
-                                  || ((filepos >= filesize) && (dataread == 512)))
+      while ((filepos < filesize) || ((retransmit_attempts != 0) && (retransmit_attempts < MAX_FAILED_RETRIES))
+             || ((filepos >= filesize) && (dataread == 512)))
       {
 
           //ORIAKI PERIPTWSI POU TO TELEYTAIO MINIMA EINAI 512 Byte
@@ -238,7 +238,7 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_soc
 
 
           if (retransmit_attempts == 0)
-          {   //AN DEN KANOUME RENTRASMIT TOTE DIAVAZOUME KAINOURGIO BLOCK APO TO ARXEIO 
+          { //AN DEN KANOUME RENTRASMIT TOTE DIAVAZOUME KAINOURGIO BLOCK APO TO ARXEIO
               //READ DATA APO TO TOPIKO ARXEIO
               dataread = fread(request.data, 1, 512, filetotransmit);
 
@@ -289,7 +289,7 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_soc
               retransmit_attempts = 0;
           }
 
-         printf ("Data read on loop is %u ",dataread);
+          printf("Data read on loop is %u ", dataread);
       }
 
 
@@ -393,7 +393,7 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in client_sock
           //SEND ACKNOWLEDGMENT
           ++ackpacket.Block;
 
-          printf("Sending acknowledgement %u \n",ackpacket.Block);
+          printf("Sending acknowledgement %u \n", ackpacket.Block);
           fflush(stdout);
           datatrans = sendto(server_sock, (const char*) & ackpacket, 4, 0, (struct sockaddr *) & client_sock, client_length);
           if (datatrans < 0)
@@ -562,12 +562,12 @@ TFTPServer(unsigned int port)
       // RRQ/WRQ   | opcode |  filename  |  0  |  Mode  |  0
       //               A          B         C       D      E
       // A part
-      if ( (request.Op1 != 0)|| ( (request.Op2 != 2) && (request.Op2 != 1) ) )
+      if ((request.Op1 != 0) || ((request.Op2 != 2) && (request.Op2 != 1)))
       {
           packeterror = 1;
       }
       // B part
-      write(1,request.data,n-2);
+      write(1, request.data, n - 2);
       strcpy(filename, request.data);
       unsigned int fnm_end = strlen(filename);
       if (fnm_end == 0)
