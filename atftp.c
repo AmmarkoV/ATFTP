@@ -28,7 +28,7 @@ void
 usage()
 {
   printf("-----------------------------------------------------\n");
-  printf("A-TFTP 0.10 - for info see :\t http://62.103.22.50   \n");
+  printf("A-TFTP 0.12 - for info see :\t http://62.103.22.50   \n");
   printf("-----------------------------------------------------\n");
   printf("Usage for TFTP client : \n");
   printf("atftp -r filename address port \t- read filename from address @ port \n");

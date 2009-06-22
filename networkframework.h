@@ -42,7 +42,11 @@
 
 enum client_mode
 {
+<<<<<<< HEAD:networkframework.h
   READ = 1, WRITE
+=======
+  NOTHING , READ, WRITE
+>>>>>>> 28f4d26ae3f7e2693be811fc902b3f059bcecb48:networkframework.h
 };
 
 struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
