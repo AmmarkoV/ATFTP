@@ -281,7 +281,7 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_soc
           }
           else
           {
-              printf("Received acknowledgement for block %u , currently locally at %u \n", ackpacket.Block, request.Block);
+              printf("Received acknowledgement ( size %u ) for block %u , currently locally at %u \n", datarecv, ackpacket.Block, request.Block);
               if (ackpacket.Block != request.Block)
               {
                   printf("\n\nOut of sync acknowledge Should send error ( todo ).!\n\n");
@@ -567,7 +567,7 @@ TFTPServer(unsigned int port)
           packeterror = 1;
       }
       // B part
-      //write(1,request.data,n-2);
+      write(1,request.data,n-2);
       strcpy(filename, request.data);
       unsigned int fnm_end = strlen(filename);
       if (fnm_end == 0)

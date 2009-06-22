@@ -281,7 +281,7 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in client_soc
           }
           else
           {
-              printf("Received acknowledgement for block %u , currently locally at %u \n", ackpacket.Block, request.Block);
+              printf("Received acknowledgement ( size %u ) for block %u , currently locally at %u \n", datarecv, ackpacket.Block, request.Block);
               if (ackpacket.Block != request.Block)
               {
                   printf("\n\nOut of sync acknowledge Should send error ( todo ).!\n\n");
@@ -393,7 +393,7 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in client_sock
           //SEND ACKNOWLEDGMENT
           ++ackpacket.Block;
 
-          printf("Sending acknowledgement\n");
+          printf("Sending acknowledgement %u \n",ackpacket.Block);
           fflush(stdout);
           datatrans = sendto(server_sock, (const char*) & ackpacket, 4, 0, (struct sockaddr *) & client_sock, client_length);
           if (datatrans < 0)
