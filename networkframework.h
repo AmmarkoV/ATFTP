@@ -33,12 +33,15 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <sys/uio.h> 
+#include <regex.h>
 
 #define DEF_SERV_PORT 69
 #define MAX_FAILED_RETRIES 10
 #define ARG_READ "-r"
 #define ARG_WRITE "-w"
 #define ARG_START_SERVR "-s"
+#define ADDRESS_PATTERN "^\\([0-9]\\{1,3\\}\\.\\)\\{3\\}[0-9]\\{1,3\\}$"
+#define PORT_PATTERN "^[0-9]\\{1,5\\}$"
 
 enum client_mode
 {

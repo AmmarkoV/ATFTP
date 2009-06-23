@@ -31,30 +31,29 @@ usage()
   printf("A-TFTP 0.12 - for info see :\t http://62.103.22.50   \n");
   printf("-----------------------------------------------------\n");
   printf("Usage for TFTP client : \n");
-  printf("atftp -r filename address port \t- read filename from address @ port \n");
-  printf("atftp -w filename address port \t- write filename to address  @ port \n");
+  printf("atftp %s filename address port \t- read filename from address @ port \n", ARG_READ);
+  printf("atftp %s filename address port \t- write filename to address  @ port \n", ARG_WRITE);
   printf("\nUsage for TFTP server : \n");
-  printf("atftp -s port \t- begin tftp server binded @ port\n");
+  printf("atftp %s [port] \t- begin tftp server binded @ port (default #port 69)\n", ARG_START_SERVR);
 }
 
 void
 paramErr(unsigned npar)
 {
   printf("Parameter error, too little parameters (%u)\n\n", npar);
-  usage();
 }
 
 void
-clientMode(int mode, char* arg2, char* arg3, char* arg4)
+clientMode(int mode, char* filename, char* address, char* port)
 {
   printf("Starting TFTP Client.. \n\n");
-  TFTPClient(arg3, atoi(arg4), arg2, mode);
+  TFTPClient(address, atoi(port), filename, mode);
 }
 
 void
 serverMode(unsigned servr_port)
 {
-  if (!servr_port)
+  if ( !servr_port )
   {
       printf("No port specified, default to port %u\n", DEF_SERV_PORT);
       servr_port = DEF_SERV_PORT;
@@ -64,31 +63,56 @@ serverMode(unsigned servr_port)
 }
 
 int
+matchExpr(char* expression, char* pattern)
+{
+  regex_t regex;
+  unsigned status;
+  regcomp(&regex, pattern, 0);
+  if ( status = regexec(&regex, expression, (size_t) 0, NULL, 0) )
+  {
+      printf("Error while parsing. Icorrect expression: %s\n\n", expression);
+  }
+  regfree(&regex);
+  return status;
+}
+
+int
+checkVars(int npar, char* address, char* port)
+{
+  unsigned status = 0;
+  if ( status = npar <= 4 )
+      paramErr(npar - 1);
+  status = matchExpr(address, ADDRESS_PATTERN) | status;
+  status = matchExpr(port, PORT_PATTERN) | status;
+  if ( status )
+      usage();
+  return status;
+}
+
+int
 main(int argc, char *argv[])
 {
-  if (argc < 2)
+  if ( argc < 2 )
   {
       usage();
   }
-  else if (strcmp(ARG_READ, argv[1]) == 0)
+  else if ( strcmp(ARG_READ, argv[1]) == 0 )
   {
-      if (argc <= 4)
+      if ( argc <= 4 )
       {
           paramErr(argc - 1);
+          usage();
           return EXIT_FAILURE;
       }
       clientMode(READ, argv[2], argv[3], argv[4]);
   }
-  else if (strcmp(ARG_WRITE, argv[1]) == 0)
+  else if ( strcmp(ARG_WRITE, argv[1]) == 0 )
   {
-      if (argc <= 4)
-      {
-          paramErr(argc - 1);
+      if ( checkVars(argc, argv[3], argv[4]) )
           return EXIT_FAILURE;
-      }
       clientMode(WRITE, argv[2], argv[3], argv[4]);
   }
-  else if (strcmp(ARG_START_SERVR, argv[1]) == 0)
+  else if ( strcmp(ARG_START_SERVR, argv[1]) == 0 )
   {
       serverMode(argv[2] == NULL ? 0 : atoi(argv[2]));
   }
