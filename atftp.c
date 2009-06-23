@@ -98,12 +98,8 @@ main(int argc, char *argv[])
   }
   else if ( strcmp(ARG_READ, argv[1]) == 0 )
   {
-      if ( argc <= 4 )
-      {
-          paramErr(argc - 1);
-          usage();
+      if ( checkVars(argc, argv[3], argv[4]) )
           return EXIT_FAILURE;
-      }
       clientMode(READ, argv[2], argv[3], argv[4]);
   }
   else if ( strcmp(ARG_WRITE, argv[1]) == 0 )
