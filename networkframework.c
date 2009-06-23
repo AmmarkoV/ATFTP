@@ -189,7 +189,7 @@ FindFreePortInRange(int thesock,struct sockaddr_in* server)
       if (bindres < 0)
       {
           //Den einai aparaitito na grafei to kathe bind step
-          printf("Binding port number %u is not availiable \n", cl_port);
+          //printf("Binding port number %u is not availiable \n", cl_port);
           ++cl_port;
       }
       else
@@ -359,8 +359,7 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in client_sock
       //          2 bytes   2 bytes
       // ACK    | opcode | block #
       //            A         B
-      /* A part */ ackpacket.Op1 = 0;
-      ackpacket.Op2 = 4;
+      /* A part */ ackpacket.Op1 = 0; ackpacket.Op2 = 4;
       /* B part */ ackpacket.Block = 0;
       // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -370,8 +369,7 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in client_sock
       //          2 bytes   2 bytes    n bytes
       // DATA   | opcode | block # |  Data
       //            A         B         C
-      /* A part */ request.Op1 = 0;
-      request.Op2 = 3;
+      /* A part */ request.Op1 = 0; request.Op2 = 3;
       /* B part */ request.Block = 0;
       /* C part */ request.data[0] = 0;
       // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
