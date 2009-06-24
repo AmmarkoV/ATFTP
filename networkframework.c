@@ -138,12 +138,14 @@ ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_le
   /* B part */ ackpacket.Block = 0;
   // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   int datarecv, retransmit_attempts = 1;
+
+  struct sockaddr_in recv_tmp;
   while ((retransmit_attempts != 0) && (retransmit_attempts < MAX_FAILED_RETRIES))
   {
       printf("Waiting to receive null acknowledgement\n");
       fflush(stdout);
       //RECEIVE ACKNOWLEDGMENT!
-      datarecv = recvfrom(server_sock, (char*) & ackpacket, 4 , 0 ,  (struct sockaddr *) & client_sock, & client_length);
+      datarecv = recvfrom(server_sock, (char*) & ackpacket, 4 , 0 ,  (struct sockaddr *) & recv_tmp, & client_length);
       if ( datarecv < 0 )
       {
           printf("Error while receiving null acknowledgement \n");
@@ -179,7 +181,9 @@ ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_le
        printf("Null acknowledgement returned null port , failed..\n");
        return -1;
     } else
-    { printf("Null acknowledgment revealed port %u \n ",ntohs ( client_sock->sin_port  )); }
+    { printf("Null acknowledgment revealed port %u \n ",ntohs ( recv_tmp.sin_port  )); 
+      //TODO NA KANW COPY STIN METAVLITI CLIENT SOCK TA PERIEXOMENA TIS RECV_TMP!
+    }
 
   return 0;
 }
@@ -390,8 +394,8 @@ ReceiveTFTPFile(char * filename, int server_sock,struct sockaddr_in * client_out
       {
           //RECEIVE DATA
           printf("Waiting to receive data\n");
-          fflush(stdout);
-          datarecv = recvfrom(server_sock, (char*) & request, sizeof (request), 0, (struct sockaddr *) & client_in_sock, &client_length);
+          fflush(stdout);                       // VAZW CLIENT_OUT_SOCK ETSI WSTE NA PERNOUME KATEYTHEIAN TIN PEER ADDRESS K NA MIN YPARXEI PROB
+          datarecv = recvfrom(server_sock, (char*) & request, sizeof (request), 0, (struct sockaddr *) & client_out_sock, &client_length);
 
           if ( datarecv < 0 )
           {
@@ -466,7 +470,7 @@ ReceiveTFTPFile(char * filename, int server_sock,struct sockaddr_in * client_out
 int
 HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, int operation)
 {
-  printf("HandleClient\n");
+  printf("HandleClient from address %s port %u\n",inet_ntoa(fromsock.sin_addr),fromsock.sin_port);
   int clsock, length, n;
   struct sockaddr_in server;
 
@@ -493,7 +497,7 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
       printerror(errno);
   }
   //SET TIMEOUT FOR OPERTATIONS
-  length = sizeof (server);
+  length =sizeof(struct sockaddr_in); //= sizeof (server);
   bzero(&server, length);
   server.sin_family = AF_INET;
   server.sin_addr.s_addr = INADDR_ANY;
@@ -519,7 +523,7 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
       ackpacket.Op1 = 0; ackpacket.Op2 = 4;
       // B part
       ackpacket.Block = 0;
-      // MAKE TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      // MAKE TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
       n == sendto(clsock, (const char*) & ackpacket, 4, 0, (struct sockaddr *) & fromsock, froml);
       if (n<0) { printf("Could not send initial null acknowledge to reveal my port.. , failed \n"); printerror(errno); exit(0); } else
                { printf("I just sent initial null acknowledgment to port %u ",ntohs(fromsock.sin_port)); }
@@ -681,7 +685,7 @@ struct timeval timeout_time = { 0 }; timeout_time.tv_sec = 20;
   
   // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
   bzero(&from, length);
-  from.sin_family = AF_INET; 
+  from.sin_family = AF_INET;
   from.sin_addr.s_addr=INADDR_ANY;
   unsigned int cl_port = cl_port = FindFreePortInRange(sock, &from);
   if ( (cl_port == 0) || (ntohs(from.sin_port) == 0) )
