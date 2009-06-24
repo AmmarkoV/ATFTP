@@ -80,10 +80,10 @@ int
 checkVars(int npar, char* address, char* port)
 {
   unsigned status = 0;
-  if ( status = npar <= 4 )
+  if ( status = (npar <= 4) )
       paramErr(npar - 1);
-  status = matchExpr(address, ADDRESS_PATTERN) | status;
-  status = matchExpr(port, PORT_PATTERN) | status;
+  else
+      status = matchExpr(address, ADDRESS_PATTERN) | matchExpr(port, PORT_PATTERN);
   if ( status )
       usage();
   return status;
