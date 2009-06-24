@@ -176,12 +176,12 @@ ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_le
   }
 
   printf("Stopping null acknowledgement wait..\n");
-  if ( ntohs ( client_sock->sin_port  ) == 0 )
+  if ( ntohs ( recv_tmp.sin_port  ) == 0 )
     {
        printf("Null acknowledgement returned null port , failed..\n");
        return -1;
     } else
-    { printf("Null acknowledgment revealed port %u \n ",ntohs ( recv_tmp.sin_port  )); 
+    { printf("Null acknowledgment revealed %s port %u\n",inet_ntoa(recv_tmp.sin_addr),ntohs ( recv_tmp.sin_port  )); 
       //TODO NA KANW COPY STIN METAVLITI CLIENT SOCK TA PERIEXOMENA TIS RECV_TMP!
     }
 
@@ -223,7 +223,7 @@ int
 TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_out_sock, int client_length)
 {
   printf("TransmitTFTPFile ( Opening local file for read ) called\n");
-  printf("TransmitTFTPFile to port %u \n", ntohs(client_out_sock->sin_port));
+  printf("TransmitTFTPFile to %s port %u\n",inet_ntoa(client_out_sock->sin_addr),ntohs(client_out_sock->sin_port));
   FILE *filetotransmit;
   filetotransmit = fopen(filename, "rb");
   unsigned int retransmit_attempts = 0;
@@ -356,7 +356,7 @@ int
 ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_out_sock, int client_length)
 {
   printf("ReceiveTFTPFile  ( Opening local file for write )  called\n");
-  printf("ReceiveTFTPFile from port %u \n", ntohs(client_out_sock->sin_port));
+  printf("ReceiveTFTPFile from %s port %u\n",inet_ntoa(client_out_sock->sin_addr),ntohs(client_out_sock->sin_port));
   FILE *filetotransmit;
   filetotransmit = fopen(filename, "wb");
   if ( filetotransmit != NULL )
@@ -470,7 +470,7 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_ou
 int
 HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, int operation)
 {
-  printf("HandleClient from address %s port %u\n",inet_ntoa(fromsock.sin_addr),fromsock.sin_port);
+  printf("HandleClient from address %s port %u\n",inet_ntoa(fromsock.sin_addr),ntohs(fromsock.sin_port));
   int clsock, length, n;
   struct sockaddr_in server;
 
