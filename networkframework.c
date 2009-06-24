@@ -187,7 +187,8 @@ ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_le
     } else
     { printf("Null acknowledgment revealed %s port %u\n",inet_ntoa(recv_tmp.sin_addr),ntohs ( recv_tmp.sin_port  )); 
       //TODO NA KANW COPY STIN METAVLITI CLIENT SOCK TA PERIEXOMENA TIS RECV_TMP!
-      return -1;
+      //memcpy(client_sock,recv_tmp,client_length);
+      *client_sock=recv_tmp;
     }
 
   return 0;
