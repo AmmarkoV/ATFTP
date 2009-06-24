@@ -79,6 +79,10 @@ printerror(int errnum)
   {
       printf("Too big values to fit\n");
   }
+  else if ( errnum == 98 )
+  {
+      printf("Address already in use!\n");
+  }
   else
   {
       printf("Unknown error %i ", errnum);
@@ -123,15 +127,14 @@ OpCodeValidTFTP(unsigned char op1, unsigned char op2)
 }
 
 int
-ReceiveNullACK(int server_sock, struct sockaddr_in*  client_sock, int client_length)
+ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_length)
 {
   // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   struct ACK_TFTP_PACKET ackpacket;
   //          2 bytes   2 bytes
   // ACK    | opcode | block #
   //            A         B
-  /* A part */ ackpacket.Op1 = 0;
-  ackpacket.Op2 = 4;
+  /* A part */ ackpacket.Op1 = 0; ackpacket.Op2 = 4;
   /* B part */ ackpacket.Block = 0;
   // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   int datarecv, retransmit_attempts = 1;
@@ -140,7 +143,7 @@ ReceiveNullACK(int server_sock, struct sockaddr_in*  client_sock, int client_len
       printf("Waiting to receive null acknowledgement\n");
       fflush(stdout);
       //RECEIVE ACKNOWLEDGMENT!
-      datarecv = recvfrom(server_sock, (char*) & ackpacket, 4, 0, (struct sockaddr *) & client_sock, &client_length);
+      datarecv = recvfrom(server_sock, (char*) & ackpacket, 4 , 0 ,  (struct sockaddr *) & client_sock, & client_length);
       if ( datarecv < 0 )
       {
           printf("Error while receiving null acknowledgement \n");
@@ -150,10 +153,10 @@ ReceiveNullACK(int server_sock, struct sockaddr_in*  client_sock, int client_len
       }
       else
       {
-          printf("Received acknowledgement for block %u from port %u ( waiting for 0 ) \n", ackpacket.Block,ntohs(client_sock->sin_port));
+          printf("Received acknowledgement for block %u ( waiting for 0 ) \n", ackpacket.Block);
           if ( (ackpacket.Op1 != 0) || (ackpacket.Op2 != 4) )
           {
-              printf("\nWrong Packet!\n");
+              printf("\nWrong Packet %u %u ( instead of 0 4 )!\n",ackpacket.Op1,ackpacket.Op2);
               ++retransmit_attempts;
           }
           else if ( ackpacket.Block != 0 )
@@ -169,7 +172,15 @@ ReceiveNullACK(int server_sock, struct sockaddr_in*  client_sock, int client_len
           }
       }
   }
+
   printf("Stopping null acknowledgement wait..\n");
+  if ( ntohs ( client_sock->sin_port  ) == 0 )
+    {
+       printf("Null acknowledgement returned null port , failed..\n");
+       return -1;
+    } else
+    { printf("Null acknowledgment revealed port %u \n ",ntohs ( client_sock->sin_port  )); }
+
   return 0;
 }
 
@@ -215,8 +226,8 @@ TransmitTFTPFile(char * filename, int server_sock,struct sockaddr_in * client_ou
   if ( filetotransmit != NULL )
   {
       //FILE CAN BE OPENED , CHECK FILE SIZE
-      unsigned int filesize = 0, filepos = 0, dataread = 0, datatrans = 0;
-      int datarecv = 0;
+      unsigned int filesize = 0, filepos = 0, datatrans = 0;
+      int datarecv = 0, dataread = 0;
       fseek(filetotransmit, 0, SEEK_END);
       filesize = ftell(filetotransmit);
       rewind(filetotransmit);
@@ -347,8 +358,8 @@ ReceiveTFTPFile(char * filename, int server_sock,struct sockaddr_in * client_out
   if ( filetotransmit != NULL )
   {
       //FILE CAN BE OPENED , CHECK FILE SIZE
-      unsigned int filesize = 0, filepos = 0, datawrite = 0, datatrans = 0, reachedend = 0;
-      int datarecv = 0;
+      unsigned int filesize = 0, filepos = 0, datatrans = 0, reachedend = 0;
+      int datarecv = 0, datawrite = 0;
       // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       struct ACK_TFTP_PACKET ackpacket;
       //          2 bytes   2 bytes
@@ -489,7 +500,7 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
 
   unsigned int cl_port = MINDATAPORT;
   // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
-  cl_port = FindFreePortInRange(clsock, &server);
+  cl_port = FindFreePortInRange(clsock,&server);
   if ( (cl_port == 0) || (ntohs(server.sin_port) == 0) )
   {
       printf("Server  will be unable to receive messages , so it will now quit ( %u , %u ) \n", cl_port, ntohs(server.sin_port));
@@ -510,6 +521,8 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
       ackpacket.Block = 0;
       // MAKE TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       n == sendto(clsock, (const char*) & ackpacket, 4, 0, (struct sockaddr *) & fromsock, froml);
+      if (n<0) { printf("Could not send initial null acknowledge to reveal my port.. , failed \n"); printerror(errno); exit(0); } else
+               { printf("I just sent initial null acknowledgment to port %u ",ntohs(fromsock.sin_port)); }
   }
 
   if ( operation == 2 ) // WRQ
@@ -682,10 +695,10 @@ struct timeval timeout_time = { 0 }; timeout_time.tv_sec = 20;
 
   // TO CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
   bzero(&to, length);
-  to.sin_family = AF_INET; //from.sin_addr.s_addr=INADDR_ANY;
-  hp = gethostbyname(server_ip);
-  if ( hp == 0 ) error("Unknown host for TFTP connection ");
-  bcopy((char *) hp->h_addr, (char *) & to.sin_addr, hp->h_length);
+  //to.sin_family = AF_INET; //from.sin_addr.s_addr=INADDR_ANY;
+  //hp = gethostbyname(server_ip);
+  //if ( hp == 0 ) error("Unknown host for TFTP connection ");
+  //bcopy((char *) hp->h_addr, (char *) & to.sin_addr, hp->h_length);
   // TO CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
 
 
@@ -725,8 +738,11 @@ struct timeval timeout_time = { 0 }; timeout_time.tv_sec = 20;
   }
   else if ( operation == WRITE ) // WRITE OPERATION
   {
-      ReceiveNullACK(sock, &to, length); // Fortwnoume sto to , pou theloume na stelnoume to minima mas!
+     int i=ReceiveNullACK(sock, &to, length); // Fortwnoume sto to , pou theloume na stelnoume to minima mas!
+     if (i==-1) { printf("Cannot receive zero acknowledge to start file transmission , failing.."); }  else
+     {
       TransmitTFTPFile(filename, sock,&to, length);
+     }
   }
   printf("Stopping TFTP client..\n");
   shutdown(sock, 2);
