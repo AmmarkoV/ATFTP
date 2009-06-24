@@ -123,7 +123,7 @@ OpCodeValidTFTP(unsigned char op1, unsigned char op2)
 }
 
 int
-ReceiveNullACK(int server_sock, struct sockaddr_in*  client_sock, int client_length)
+ReceiveNullACK(int server_sock, struct sockaddr_in* client_sock, int client_length)
 {
   // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   struct ACK_TFTP_PACKET ackpacket;
@@ -140,7 +140,8 @@ ReceiveNullACK(int server_sock, struct sockaddr_in*  client_sock, int client_len
       printf("Waiting to receive null acknowledgement\n");
       fflush(stdout);
       //RECEIVE ACKNOWLEDGMENT!
-      datarecv = recvfrom(server_sock, (char*) & ackpacket, 4, 0, (struct sockaddr *) & client_sock, &client_length);
+      datarecv = recvfrom(server_sock, (char*) & ackpacket, 4, 0,
+                          (struct sockaddr *) & client_sock, &client_length);
       if ( datarecv < 0 )
       {
           printf("Error while receiving null acknowledgement \n");
@@ -150,7 +151,8 @@ ReceiveNullACK(int server_sock, struct sockaddr_in*  client_sock, int client_len
       }
       else
       {
-          printf("Received acknowledgement for block %u from port %u ( waiting for 0 ) \n", ackpacket.Block,ntohs(client_sock->sin_port));
+          printf("Received acknowledgement for block %u from port %u ( waiting for 0 ) \n",
+                 ackpacket.Block, ntohs(client_sock->sin_port));
           if ( (ackpacket.Op1 != 0) || (ackpacket.Op2 != 4) )
           {
               printf("\nWrong Packet!\n");
@@ -205,7 +207,7 @@ FindFreePortInRange(int thesock, struct sockaddr_in* server)
 }
 
 int
-TransmitTFTPFile(char * filename, int server_sock,struct sockaddr_in * client_out_sock, int client_length)
+TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_out_sock, int client_length)
 {
   printf("TransmitTFTPFile ( Opening local file for read ) called\n");
   printf("TransmitTFTPFile to port %u \n", ntohs(client_out_sock->sin_port));
@@ -338,7 +340,7 @@ TransmitTFTPFile(char * filename, int server_sock,struct sockaddr_in * client_ou
 }
 
 int
-ReceiveTFTPFile(char * filename, int server_sock,struct sockaddr_in * client_out_sock, int client_length)
+ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_out_sock, int client_length)
 {
   printf("ReceiveTFTPFile  ( Opening local file for write )  called\n");
   printf("ReceiveTFTPFile from port %u \n", ntohs(client_out_sock->sin_port));
@@ -505,7 +507,8 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
       // ACK  | opcode |  block #
       //          A         B
       // A part
-      ackpacket.Op1 = 0; ackpacket.Op2 = 4;
+      ackpacket.Op1 = 0;
+      ackpacket.Op2 = 4;
       // B part
       ackpacket.Block = 0;
       // MAKE TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -514,11 +517,11 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
 
   if ( operation == 2 ) // WRQ
   {
-      ReceiveTFTPFile(filename, clsock,&fromsock, froml);
+      ReceiveTFTPFile(filename, clsock, &fromsock, froml);
   }
   else if ( operation == 1 ) // RRQ
   {
-      TransmitTFTPFile(filename, clsock,&fromsock, froml);
+      TransmitTFTPFile(filename, clsock, &fromsock, froml);
   }
 
   fflush(stdout);
@@ -633,8 +636,9 @@ TFTPClient(char * server_ip, unsigned int port, char * filename, int operation)
   struct hostent *hp;
   sock = socket(AF_INET, SOCK_DGRAM, 0);
   if ( sock < 0 ) error("Could not open socket for TFTP connection");
-  
-struct timeval timeout_time = { 0 }; timeout_time.tv_sec = 20;
+
+  struct timeval timeout_time = { 0 };
+  timeout_time.tv_sec = 20;
   int i = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
   if ( i != 0 )
   {
@@ -664,12 +668,12 @@ struct timeval timeout_time = { 0 }; timeout_time.tv_sec = 20;
 
 
   // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
-  struct sockaddr_in from , to;
-  
+  struct sockaddr_in from, to;
+
   // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
   bzero(&from, length);
-  from.sin_family = AF_INET; 
-  from.sin_addr.s_addr=INADDR_ANY;
+  from.sin_family = AF_INET;
+  from.sin_addr.s_addr = INADDR_ANY;
   unsigned int cl_port = cl_port = FindFreePortInRange(sock, &from);
   if ( (cl_port == 0) || (ntohs(from.sin_port) == 0) )
   {
@@ -716,17 +720,17 @@ struct timeval timeout_time = { 0 }; timeout_time.tv_sec = 20;
 
   //STELNOUME TO PRWTO PAKETO PROS TO PORT 69 TOU SERVER
   n = sendto(sock, (const char*) & request, fnm_end + 2, 0, (struct sockaddr *) & server, length);
-  if ( n < 0 )  error("Sending initial TFTP packet");
+  if ( n < 0 ) error("Sending initial TFTP packet");
   //Mexri edw exoume steilei i RRQ , i WRQ to opoio einai sigouro..
   // Vazoume from anti server giati o server einai i socket pros to port 69 , to from einai to 2o port
   if ( operation == READ ) // READ OPERATION
   {
-      ReceiveTFTPFile(filename, sock,&to, length);
+      ReceiveTFTPFile(filename, sock, &to, length);
   }
   else if ( operation == WRITE ) // WRITE OPERATION
   {
       ReceiveNullACK(sock, &to, length); // Fortwnoume sto to , pou theloume na stelnoume to minima mas!
-      TransmitTFTPFile(filename, sock,&to, length);
+      TransmitTFTPFile(filename, sock, &to, length);
   }
   printf("Stopping TFTP client..\n");
   shutdown(sock, 2);
