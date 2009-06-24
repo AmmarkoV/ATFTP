@@ -39,7 +39,11 @@ error(char *msg)
 void
 printerror(int errnum)
 {
-  if ( errnum == EBADF )
+  if ( errnum == 0 )
+  {
+      printf("No error \n");
+  }
+  else if ( errnum == EBADF )
   {
       printf("The argument is an invalid descriptor\n");
   }
@@ -183,6 +187,7 @@ ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_le
     } else
     { printf("Null acknowledgment revealed %s port %u\n",inet_ntoa(recv_tmp.sin_addr),ntohs ( recv_tmp.sin_port  )); 
       //TODO NA KANW COPY STIN METAVLITI CLIENT SOCK TA PERIEXOMENA TIS RECV_TMP!
+      return -1;
     }
 
   return 0;
@@ -230,8 +235,8 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_o
   if ( filetotransmit != NULL )
   {
       //FILE CAN BE OPENED , CHECK FILE SIZE
-      unsigned int filesize = 0, filepos = 0, datatrans = 0;
-      int datarecv = 0, dataread = 0;
+      unsigned int filesize = 0, filepos = 0;
+      int datatrans = 0 , datarecv = 0, dataread = 0;
       fseek(filetotransmit, 0, SEEK_END);
       filesize = ftell(filetotransmit);
       rewind(filetotransmit);
@@ -362,8 +367,8 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_ou
   if ( filetotransmit != NULL )
   {
       //FILE CAN BE OPENED , CHECK FILE SIZE
-      unsigned int filesize = 0, filepos = 0, datatrans = 0, reachedend = 0;
-      int datarecv = 0, datawrite = 0;
+      unsigned int filesize = 0, filepos = 0;
+      int datarecv = 0, datawrite = 0 , datatrans = 0, reachedend = 0;
       // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       struct ACK_TFTP_PACKET ackpacket;
       //          2 bytes   2 bytes
@@ -394,7 +399,7 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_ou
       {
           //RECEIVE DATA
           printf("Waiting to receive data\n");
-          fflush(stdout);                       // VAZW CLIENT_OUT_SOCK ETSI WSTE NA PERNOUME KATEYTHEIAN TIN PEER ADDRESS K NA MIN YPARXEI PROB
+          fflush(stdout);                     // VAZW CLIENT_OUT_SOCK ETSI WSTE NA PERNOUME KATEYTHEIAN TIN PEER ADDRESS K NA MIN YPARXEI PROB
           datarecv = recvfrom(server_sock, (char*) & request, sizeof (request), 0, (struct sockaddr *) & client_out_sock, &client_length);
 
           if ( datarecv < 0 )
@@ -525,7 +530,10 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
       // B part
       ackpacket.Block = 0;
       // MAKE TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
-      n == sendto(clsock, (const char*) & ackpacket, 4, 0, (struct sockaddr *) & fromsock, froml);
+      froml=sizeof(struct sockaddr_in); // <- KAKO DN KANEI :P  
+      errno=0;
+      printf("Trying to send null ack to address %s port %u\n",inet_ntoa(fromsock.sin_addr),ntohs(fromsock.sin_port)); 
+      n = sendto(clsock, (const char*) & ackpacket, 4, 0, (struct sockaddr *) & fromsock, froml);
       if (n<0) { printf("Could not send initial null acknowledge to reveal my port.. , failed \n"); printerror(errno); exit(0); } else
                { printf("I just sent initial null acknowledgment to port %u ",ntohs(fromsock.sin_port)); }
   }
