@@ -68,6 +68,13 @@ struct ACK_TFTP_PACKET //  <- GIA ACKNOWLEDGMENT PAKETA
   char data[512];
 };
 
+struct ERROR_TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
+{
+  unsigned char Op1, Op2;
+  unsigned short ErrorCode;
+  char data[512];
+};
+
 unsigned int MINDATAPORT;
 unsigned int MAXDATAPORT;
 

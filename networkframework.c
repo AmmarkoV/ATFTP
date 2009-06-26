@@ -203,6 +203,44 @@ ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_le
   return 0;
 }
 
+
+
+int
+TransmitError(char * message,unsigned short errorcode,int sock,struct sockaddr_in* peer)
+{
+  printf("\n Transmitting error message `%s` ( code %i ) to %s:%u \n",message,errorcode,inet_ntoa(peer->sin_addr),ntohs(peer->sin_port));
+  // ERROR TFTP PACKET ASSEMBLY! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+  struct ERROR_TFTP_PACKET error = { 0 };
+      //          2 bytes     2 bytes               1byte
+      // ERROR   | opcode |  errorcode  |   MSG  |    0
+      //               A          B         C         D
+      // A part
+      error.Op1 = 0; error.Op2 = 5; 
+      // B part
+      error.ErrorCode=errorcode;
+      // C part
+      strcpy( error.data , message);
+      // D part
+      error.data[strlen(message)]=0;
+  // ERROR TFTP PACKET ASSEMBLY COMPLETE! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      unsigned int n=sendto(sock, (const char*) & error, strlen(message) + 4, 0, (struct sockaddr *) & peer, sizeof(struct sockaddr_in));
+      if (n<0)
+         {
+            printf("Failed to transmit error message! , no retries \n ");
+            printerror(errno);
+         } else
+     if (n<strlen(message) + 4)
+         {
+           printf("Failed to transmit complete error message! , no retries \n ");
+         } else
+         {
+           printf("Tried my best to forward error message! , no retries \n ");
+         }
+
+  return;
+}
+
+
 int
 FindFreePortInRange(int thesock, struct sockaddr_in* server)
 { clear_error();
@@ -620,7 +658,7 @@ TFTPServer(unsigned int port)
           if ( fork_res < 0 )
           {
               printf("Could not fork server , client will fail\n");
-              //TODO ADD ERROR PACKET
+             TransmitError("Cannot fork accept connection",1,sock,&from);
           }
           else if ( fork_res == 0 )
           {
