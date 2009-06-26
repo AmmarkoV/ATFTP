@@ -36,6 +36,11 @@ error(char *msg)
   exit(0);
 }
 
+void clear_error()
+{
+  errno=0;
+}
+
 void
 printerror(int errnum)
 {
@@ -87,6 +92,10 @@ printerror(int errnum)
   {
       printf("Address already in use!\n");
   }
+  else if ( errnum == 97 )
+  {
+      printf("Address family not supported by protocol in use!\n");
+  }
   else
   {
       printf("Unknown error %i ", errnum);
@@ -133,6 +142,7 @@ OpCodeValidTFTP(unsigned char op1, unsigned char op2)
 int
 ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_length)
 {
+  clear_error();
   // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   struct ACK_TFTP_PACKET ackpacket;
   //          2 bytes   2 bytes
@@ -185,9 +195,8 @@ ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_le
        printf("Null acknowledgement returned null port , failed..\n");
        return -1;
     } else
-    { printf("Null acknowledgment revealed %s port %u\n",inet_ntoa(recv_tmp.sin_addr),ntohs ( recv_tmp.sin_port  )); 
-      //TODO NA KANW COPY STIN METAVLITI CLIENT SOCK TA PERIEXOMENA TIS RECV_TMP!
-      //memcpy(client_sock,recv_tmp,client_length);
+    { printf("Null acknowledgment revealed %s port %u ,family %i\n",inet_ntoa(recv_tmp.sin_addr),ntohs ( recv_tmp.sin_port ),recv_tmp.sin_family);
+
       *client_sock=recv_tmp;
     }
 
@@ -196,7 +205,7 @@ ReceiveNullACK(int server_sock, struct sockaddr_in *  client_sock, int client_le
 
 int
 FindFreePortInRange(int thesock, struct sockaddr_in* server)
-{
+{ clear_error();
   unsigned int cl_port = MINDATAPORT;
   int bindres = 0, length = sizeof (struct sockaddr_in);
   while (cl_port <= MAXDATAPORT)
@@ -221,13 +230,13 @@ FindFreePortInRange(int thesock, struct sockaddr_in* server)
       fflush(stdout);
       cl_port = 0;
   }
-
+  clear_error(); // Gia na aporofisoume ta errors twn apotyximenwn binds!
   return cl_port;
 }
 
 int
 TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_out_sock, int client_length)
-{
+{ clear_error();
   printf("TransmitTFTPFile ( Opening local file for read ) called\n");
   printf("TransmitTFTPFile to %s port %u\n",inet_ntoa(client_out_sock->sin_addr),ntohs(client_out_sock->sin_port));
   FILE *filetotransmit;
@@ -307,11 +316,11 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_o
           } // AN DEN KANOUME RENTRASMIT TOTE DIAVAZOUME KAINOURGIO BLOCK APO TO ARXEIO 
 
 
-          printf("Sending data %u \n", dataread + 4);
-          fflush(stdout);
+          printf("Sending data %u \n", dataread + 4); fflush(stdout);
           datatrans = sendto(server_sock, (const char*) & request, dataread + 4, 0, (struct sockaddr *) & client_out_sock, client_length);
           if ( datatrans < 0 )
           {
+              printf("Error while sending file %s ( conn family %i )", filename , client_out_sock->sin_family);
               printf("Error while sending file %s ", filename);
               printerror(errno);
               fclose(filetotransmit);
@@ -360,7 +369,7 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_o
 
 int
 ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_out_sock, int client_length)
-{
+{ clear_error();
   printf("ReceiveTFTPFile  ( Opening local file for write )  called\n");
   printf("ReceiveTFTPFile from %s port %u\n",inet_ntoa(client_out_sock->sin_addr),ntohs(client_out_sock->sin_port));
   FILE *filetotransmit;
@@ -549,7 +558,7 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
   }
 
   fflush(stdout);
-  shutdown(clsock, 2);
+  //shutdown(clsock, 2);
   write(1, "Exiting thread..!\n", 18);
   exit(0);
 }
@@ -572,8 +581,7 @@ TFTPServer(unsigned int port)
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_port = htons(port);
 
-  if ( bind(sock, (struct sockaddr *) & server, length) < 0 )
-      error("binding master port for atftp!");
+  if ( bind(sock, (struct sockaddr *) & server, length) < 0 ) error("binding master port for atftp!");
   fromlen = sizeof (struct sockaddr_in);
   char filename[512];
 
@@ -663,7 +671,8 @@ TFTPClient(char * server_ip, unsigned int port, char * filename, int operation)
 
   struct timeval timeout_time = { 0 };
   timeout_time.tv_sec = 20;
-  int i = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
+  int i=0;
+  i = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
   if ( i != 0 )
   {
       printf("Error setting receive Timeout for client socket \n");
@@ -691,26 +700,29 @@ TFTPClient(char * server_ip, unsigned int port, char * filename, int operation)
 
 
 
-  // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
+  // TA SOCKADDR structures pou mas xreiazontai!
   struct sockaddr_in from, to;
 
   // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
   bzero(&from, length);
   from.sin_family = AF_INET;
   from.sin_addr.s_addr = INADDR_ANY;
-  unsigned int cl_port = cl_port = FindFreePortInRange(sock, &from);
+
+  unsigned int cl_port = 0;
+   cl_port = FindFreePortInRange(sock, &from);
   if ( (cl_port == 0) || (ntohs(from.sin_port) == 0) )
   {
       printf("Client will be unable to receive messages , so it will now quit ( %u , %u ) \n", cl_port, ntohs(from.sin_port));
       exit(0);
-  }
+  } 
   // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
 
 
 
-  // TO CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
+  // TO CODE GIA NA STELNOUME TA MINIMATA APO TON SERVER
   bzero(&to, length);
-  //to.sin_family = AF_INET; //from.sin_addr.s_addr=INADDR_ANY;
+  to.sin_family = AF_INET;
+//  to.sin_addr.s_addr=INADDR_ANY;
   //hp = gethostbyname(server_ip);
   //if ( hp == 0 ) error("Unknown host for TFTP connection ");
   //bcopy((char *) hp->h_addr, (char *) & to.sin_addr, hp->h_length);
@@ -739,7 +751,7 @@ TFTPClient(char * server_ip, unsigned int port, char * filename, int operation)
   request.data[fnm_end++] = 'e';
   request.data[fnm_end++] = 't';
   // E part
-  request.data[fnm_end++] = 0;
+  request.data[fnm_end] = 0;
   // MAKE TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
   //STELNOUME TO PRWTO PAKETO PROS TO PORT 69 TOU SERVER
@@ -760,7 +772,7 @@ TFTPClient(char * server_ip, unsigned int port, char * filename, int operation)
      }
   }
   printf("Stopping TFTP client..\n");
-  shutdown(sock, 2);
+ // shutdown(sock, 2);
   return (0);
 }
 
