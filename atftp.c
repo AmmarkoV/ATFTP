@@ -28,7 +28,7 @@ void
 usage()
 {
   printf("-----------------------------------------------------\n");
-  printf("AC-TFTP 0.18 - for code \t git://github.com/AmmarkoV/ATFTP.git   \n");
+  printf("AC-TFTP 0.19 - for code \t git://github.com/AmmarkoV/ATFTP.git   \n");
   printf("-----------------------------------------------------\n");
   printf("Usage for TFTP client : \n");
   printf("atftp %s filename address port \t- read filename from address @ port \n", ARG_READ);
