@@ -28,13 +28,36 @@ void
 usage()
 {
   printf("-----------------------------------------------------\n");
-  printf("A-TFTP 0.16 - for info see :\t http://62.103.22.50   \n");
+  printf("AC-TFTP 0.18 - for code \t git://github.com/AmmarkoV/ATFTP.git   \n");
   printf("-----------------------------------------------------\n");
   printf("Usage for TFTP client : \n");
   printf("atftp %s filename address port \t- read filename from address @ port \n", ARG_READ);
   printf("atftp %s filename address port \t- write filename to address  @ port \n", ARG_WRITE);
   printf("\nUsage for TFTP server : \n");
   printf("atftp %s [port] \t- begin tftp server binded @ port (default #port 69)\n", ARG_START_SERVR);
+}
+
+int
+root_check()
+{ 
+  //TODO ADD CODE edw gia na kanei check an o xristis pou trexei to programma einai root
+  // se periptwsi pou einai tote emfanizetai minima k epistrefetai -1
+  if (0)
+  {
+    printf("\n\n\n\n-----------------------------------------------------\n");
+    printf("------------------!!!! WARNING !!!!------------------\n");
+    printf("-----------------------------------------------------\n\n");
+    printf("Due to the unsecure nature of the TFTP protocol it is a VERY bad idea to run the ATFTP server from a root account , ");
+    printf("the safest way to run atftp server is to create a new user named tftp_service ( or something like that ) , and thus ");
+    printf("isolating the program from all other files to prevent damage from malicious clients to your system ..!");
+    printf("\n-----------------------------------------------------\n");
+    printf("------------------!!!! WARNING !!!!------------------\n");
+    printf("-----------------------------------------------------\n\n\n\n\n");
+    fflush(stdout);
+    return -1;
+  }
+
+  return 0;
 }
 
 void
@@ -110,6 +133,7 @@ main(int argc, char *argv[])
   }
   else if ( strcmp(ARG_START_SERVR, argv[1]) == 0 )
   {
+      if ( root_check()==-1 ) { return(0); }
       serverMode(argv[2] == NULL ? 0 : atoi(argv[2]));
   }
   else

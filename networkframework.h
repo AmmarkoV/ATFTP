@@ -77,6 +77,7 @@ struct ERROR_TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI
 
 unsigned int MINDATAPORT;
 unsigned int MAXDATAPORT;
+unsigned short verbosity;
 
 int TFTPServer(unsigned int port);
 int TFTPClient(char * server, unsigned int port, char * filename, int operation);
