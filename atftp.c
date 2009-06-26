@@ -42,7 +42,7 @@ root_check()
 { 
   //TODO ADD CODE edw gia na kanei check an o xristis pou trexei to programma einai root
   // se periptwsi pou einai tote emfanizetai minima k epistrefetai -1
-  if (0)
+  if (getuid()==0)
   {
     printf("\n\n\n\n-----------------------------------------------------\n");
     printf("------------------!!!! WARNING !!!!------------------\n");
@@ -53,6 +53,7 @@ root_check()
     printf("\n-----------------------------------------------------\n");
     printf("------------------!!!! WARNING !!!!------------------\n");
     printf("-----------------------------------------------------\n\n\n\n\n");
+    printf("ATFTP Server will now quit\n");
     fflush(stdout);
     return -1;
   }

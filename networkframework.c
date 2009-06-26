@@ -22,7 +22,7 @@
 
 unsigned int MINDATAPORT = 30000;
 unsigned int MAXDATAPORT = 37000;
-unsigned short verbosity=1; // 3 Trivial Debuge messages ,2  Debug Messages , 1  Error Messages , 0 No messages at all
+unsigned short verbosity=1; // 3 Trivial Debug messages ,2  Status Messages , 1  Error Messages , 0 No messages at all
 
 //     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //
