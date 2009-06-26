@@ -92,7 +92,7 @@ printerror(int errnum)
   {
       printf("Address already in use!\n");
   }
-  else if ( errnum == 97 )
+  else if ( errnum == EAFNOSUPPORT )
   {
       printf("Address family not supported by protocol in use!\n");
   }
@@ -235,10 +235,12 @@ FindFreePortInRange(int thesock, struct sockaddr_in* server)
 }
 
 int
-TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_out_sock, int client_length)
+TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_pout_sock, int client_length)
 { clear_error();
+  struct sockaddr_in client_send_sockaddr;
+  client_send_sockaddr= *client_pout_sock;
   printf("TransmitTFTPFile ( Opening local file for read ) called\n");
-  printf("TransmitTFTPFile to %s port %u\n",inet_ntoa(client_out_sock->sin_addr),ntohs(client_out_sock->sin_port));
+  printf("TransmitTFTPFile to %s port %u\n",inet_ntoa(client_send_sockaddr.sin_addr),ntohs(client_send_sockaddr.sin_port));
   FILE *filetotransmit;
   filetotransmit = fopen(filename, "rb");
   unsigned int retransmit_attempts = 0;
@@ -317,11 +319,10 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_o
 
 
           printf("Sending data %u \n", dataread + 4); fflush(stdout);
-          datatrans = sendto(server_sock, (const char*) & request, dataread + 4, 0, (struct sockaddr *) & client_out_sock, client_length);
+          datatrans = sendto(server_sock, (const char*) & request, dataread + 4, 0, (struct sockaddr *) & client_send_sockaddr, client_length);
           if ( datatrans < 0 )
           {
-              printf("Error while sending file %s ( conn family %i )", filename , client_out_sock->sin_family);
-              printf("Error while sending file %s ", filename);
+              printf("Error while sending file %s ( conn family %i  , AF_INET = %i)", filename , client_send_sockaddr.sin_family,AF_INET);
               printerror(errno);
               fclose(filetotransmit);
               return 1;
@@ -368,10 +369,12 @@ TransmitTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_o
 }
 
 int
-ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_out_sock, int client_length)
+ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_pout_sock, int client_length)
 { clear_error();
+  struct sockaddr_in client_send_sockaddr;
+  client_send_sockaddr= *client_pout_sock;
   printf("ReceiveTFTPFile  ( Opening local file for write )  called\n");
-  printf("ReceiveTFTPFile from %s port %u\n",inet_ntoa(client_out_sock->sin_addr),ntohs(client_out_sock->sin_port));
+  printf("ReceiveTFTPFile from %s port %u\n",inet_ntoa(client_send_sockaddr.sin_addr),ntohs(client_send_sockaddr.sin_port));
   FILE *filetotransmit;
   filetotransmit = fopen(filename, "wb");
   if ( filetotransmit != NULL )
@@ -410,7 +413,7 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_ou
           //RECEIVE DATA
           printf("Waiting to receive data\n");
           fflush(stdout);                     // VAZW CLIENT_OUT_SOCK ETSI WSTE NA PERNOUME KATEYTHEIAN TIN PEER ADDRESS K NA MIN YPARXEI PROB
-          datarecv = recvfrom(server_sock, (char*) & request, sizeof (request), 0, (struct sockaddr *) & client_out_sock, &client_length);
+          datarecv = recvfrom(server_sock, (char*) & request, sizeof (request), 0, (struct sockaddr *) & client_send_sockaddr, &client_length);
 
           if ( datarecv < 0 )
           {
@@ -457,7 +460,7 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_ou
 
           printf("Sending acknowledgement %u \n", ackpacket.Block);
           fflush(stdout);
-          datatrans = sendto(server_sock, (const char*) & ackpacket, 4, 0, (struct sockaddr *) & client_out_sock, client_length);
+          datatrans = sendto(server_sock, (const char*) & ackpacket, 4, 0, (struct sockaddr *) & client_send_sockaddr, client_length);
           if ( datatrans < 0 )
           {
               printf("Error while sending acknowledgment %s ", filename);
@@ -666,9 +669,13 @@ TFTPClient(char * server_ip, unsigned int port, char * filename, int operation)
   int sock, length, n;
   struct sockaddr_in server;
   struct hostent *hp;
-  sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if ( sock < 0 ) error("Could not open socket for TFTP connection");
-
+  sock = socket(AF_INET, SOCK_DGRAM, 0); 
+  if ( sock < 0 ) 
+  {
+   printf("Error creating socket for TFTP connection , failed.. \n");
+   printerror(errno);
+   exit(0);
+  }
   struct timeval timeout_time = { 0 };
   timeout_time.tv_sec = 20;
   int i=0;
@@ -756,7 +763,12 @@ TFTPClient(char * server_ip, unsigned int port, char * filename, int operation)
 
   //STELNOUME TO PRWTO PAKETO PROS TO PORT 69 TOU SERVER
   n = sendto(sock, (const char*) & request, fnm_end + 2, 0, (struct sockaddr *) & server, length);
-  if ( n < 0 ) error("Sending initial TFTP packet");
+  if ( n < 0 ) 
+  {
+   printf("Error sending initial TFTP packet , failed.. \n");
+   printerror(errno);
+   exit(0);
+  }
   //Mexri edw exoume steilei i RRQ , i WRQ to opoio einai sigouro..
   // Vazoume from anti server giati o server einai i socket pros to port 69 , to from einai to 2o port
   if ( operation == READ ) // READ OPERATION
