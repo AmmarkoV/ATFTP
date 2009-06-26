@@ -29,23 +29,39 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/uio.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <sys/uio.h> 
 #include <regex.h>
+#include <unistd.h>
 
 #define DEF_SERV_PORT 69
 #define MAX_FAILED_RETRIES 10
-#define ARG_READ "-r"
-#define ARG_WRITE "-w"
-#define ARG_START_SERVR "-s"
+
+#define SERVR_OPT 's'
+#define READ_OPT 'r'
+#define WRITE_OPT 'w'
+#define PORT_OPT 'p'
+#define ADDRESS_OPT 'a'
+#define FILE_OPT 'f'
+#define LOG_OPT 'l'
+#define VERBOSE_OPT 'v'
+#define DEBUG_OPT 'd'
+#define NEED_ARG ':'
+
+#define DEF_LOG_FILE "tftp.log"
 #define ADDRESS_PATTERN "^\\([0-9]\\{1,3\\}\\.\\)\\{3\\}[0-9]\\{1,3\\}$"
 #define PORT_PATTERN "^[0-9]\\{1,5\\}$"
 
-enum client_mode
+enum values
 {
-  READ = 1, WRITE
+  ZERO, READ, WRITE, SERVER_MODE, CLIENT_MODE,
+};
+
+enum errors
+{
+  USAGE_ERR, ROOT_ERR,
 };
 
 struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
@@ -80,6 +96,6 @@ unsigned int MAXDATAPORT;
 unsigned short verbosity;
 
 int TFTPServer(unsigned int port);
-int TFTPClient(char * server, unsigned int port, char * filename, int operation);
+int TFTPClient(char * server, unsigned port, const char * filename, const int operation);
 
 #endif

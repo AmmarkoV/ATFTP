@@ -25,121 +25,235 @@
 #include "networkframework.h"
 
 void
-usage()
+usage(const char* program)
 {
-  printf("-----------------------------------------------------\n");
-  printf("AC-TFTP 0.18 - for code \t git://github.com/AmmarkoV/ATFTP.git   \n");
-  printf("-----------------------------------------------------\n");
-  printf("Usage for TFTP client : \n");
-  printf("atftp %s filename address port \t- read filename from address @ port \n", ARG_READ);
-  printf("atftp %s filename address port \t- write filename to address  @ port \n", ARG_WRITE);
+  if ( program == NULL )
+  {
+      program = "yatftp";
+  }
+  printf("\n----------------------------------------------------------------------\n");
+  printf("YATFTP 0.19 - for code see link @ git://github.com/AmmarkoV/ATFTP.git\n");
+  printf("----------------------------------------------------------------------\n");
+  printf("\nUsage for TFTP client : \n");
+  printf("%s -%c -%c filename -%c address -%c port :\t "
+         "read filename from address @ port \n",
+         program, READ_OPT, FILE_OPT, ADDRESS_OPT, PORT_OPT);
+  printf("%s -%c -%c filename -%c address -%c port :\t "
+         "write filename to address @ port \n",
+         program, WRITE_OPT, FILE_OPT, ADDRESS_OPT, PORT_OPT);
   printf("\nUsage for TFTP server : \n");
-  printf("atftp %s [port] \t- begin tftp server binded @ port (default #port 69)\n", ARG_START_SERVR);
+  printf("%s -%c [-%c port] :\t "
+         "begin tftp server binded @ port (default #port %d)\n",
+         program, SERVR_OPT, PORT_OPT, DEF_SERV_PORT);
+  printf("\nCommon Options : \n");
+  printf("-%c :\t log output to file %s\n", LOG_OPT, DEF_LOG_FILE);
+  printf("-%c :\t use verbose output\n", VERBOSE_OPT);
+  printf("-%c :\t use debug output\n", DEBUG_OPT);
+}
+
+void
+rootwarn()
+{
+  printf("\n\n\n\n-----------------------------------------------------\n");
+  printf("------------------!!!! WARNING !!!!------------------\n");
+  printf("-----------------------------------------------------\n\n");
+  printf("Due to the unsecure nature of the TFTP protocol it is a VERY "
+         "bad idea to run the YATFTP server from a root account , ");
+  printf("the safest way to run yatftp server is to create a new user "
+         "named tftp_service ( or something like that ) , and thus ");
+  printf("isolating the program from all other files to prevent damage "
+         "from malicious clients to your system ..!");
+  printf("\n-----------------------------------------------------\n");
+  printf("------------------!!!! WARNING !!!!------------------\n");
+  printf("-----------------------------------------------------\n\n\n\n\n");
+  printf("ATFTP Server will now quit\n");
+  fflush(stdout);
 }
 
 int
-root_check()
-{ 
-  //TODO ADD CODE edw gia na kanei check an o xristis pou trexei to programma einai root
-  // se periptwsi pou einai tote emfanizetai minima k epistrefetai -1
-  if (getuid()==0)
-  {
-    printf("\n\n\n\n-----------------------------------------------------\n");
-    printf("------------------!!!! WARNING !!!!------------------\n");
-    printf("-----------------------------------------------------\n\n");
-    printf("Due to the unsecure nature of the TFTP protocol it is a VERY bad idea to run the ATFTP server from a root account , ");
-    printf("the safest way to run atftp server is to create a new user named tftp_service ( or something like that ) , and thus ");
-    printf("isolating the program from all other files to prevent damage from malicious clients to your system ..!");
-    printf("\n-----------------------------------------------------\n");
-    printf("------------------!!!! WARNING !!!!------------------\n");
-    printf("-----------------------------------------------------\n\n\n\n\n");
-    printf("ATFTP Server will now quit\n");
-    fflush(stdout);
-    return -1;
-  }
-
-  return 0;
-}
-
-void
-paramErr(unsigned npar)
-{
-  printf("Parameter error, too little parameters (%u)\n\n", npar);
-}
-
-void
-clientMode(int mode, char* filename, char* address, char* port)
-{
-  printf("Starting TFTP Client.. \n\n");
-  TFTPClient(address, atoi(port), filename, mode);
-}
-
-void
-serverMode(unsigned servr_port)
-{
-  if ( !servr_port )
-  {
-      printf("No port specified, default to port %u\n", DEF_SERV_PORT);
-      servr_port = DEF_SERV_PORT;
-  }
-  printf("Starting TFTP Server at port %u .. \n\n", servr_port);
-  TFTPServer(servr_port);
-}
-
-int
-matchExpr(char* expression, char* pattern)
+matchexpr(const char* expression, const char* pattern)
 {
   regex_t regex;
   unsigned status;
   regcomp(&regex, pattern, 0);
-  if ( status = regexec(&regex, expression, (size_t) 0, NULL, 0) )
-  {
-      printf("Error while parsing. Icorrect expression: %s\n\n", expression);
-  }
+  status = regexec(&regex, expression, (size_t) 0, NULL, 0);
   regfree(&regex);
   return status;
 }
 
 int
-checkVars(int npar, char* address, char* port)
+mixerr(const char* program)
 {
-  unsigned status = 0;
-  if ( status = (npar <= 4) )
-      paramErr(npar - 1);
-  else
-      status = matchExpr(address, ADDRESS_PATTERN) | matchExpr(port, PORT_PATTERN);
-  if ( status )
-      usage();
-  return status;
+  fprintf(stderr, "%s: Wrong arguments. Do not mix server/client options\n", program);
+  usage(program);
+  return EXIT_FAILURE;
+}
+
+void
+argerr(char* program, char option, char* expr)
+{
+  fprintf(stderr, "%s: Wrong argument for -%c option: %s\n", program, option, expr);
+}
+
+void
+client(const int operation, const char* filename, char* address, int port)
+{
+  printf("Starting TFTP Client.. \n\n");
+  TFTPClient(address, port, filename, operation);
+}
+
+void
+server(unsigned servr_port)
+{
+  printf("Starting TFTP Server at port %u .. \n\n", servr_port);
+  TFTPServer(servr_port);
 }
 
 int
 main(int argc, char *argv[])
 {
+  int opt, mode, operation, port = DEF_SERV_PORT, verbose = 0, log = 0, debug = 0;
+  int rdflg = 0, wrflg = 0, errflg = 0, addrflg = 1, flflg = 1; /* flags */
+  char *filename, *logfile, *address;
+  char options[] = { SERVR_OPT, READ_OPT, WRITE_OPT, PORT_OPT, NEED_ARG, LOG_OPT,
+      ADDRESS_OPT, NEED_ARG, FILE_OPT, NEED_ARG, VERBOSE_OPT, DEBUG_OPT, '\0' };
+  extern char *optarg;
+  /* check if root */
+  if ( !getuid() )
+  {
+      rootwarn();
+      return EXIT_FAILURE;
+  }
+  /* check no arguments */
   if ( argc < 2 )
   {
-      usage();
+      usage(argv[0]);
+      return EXIT_FAILURE;
   }
-  else if ( strcmp(ARG_READ, argv[1]) == 0 )
+  /* read arguments and set initial values */
+  /* opterr = 0; /* do not print getargs() error messages */
+  while ((opt = getopt(argc, argv, options)) != -1)
   {
-      if ( checkVars(argc, argv[3], argv[4]) )
-          return EXIT_FAILURE;
-      clientMode(READ, argv[2], argv[3], argv[4]);
+      switch (opt)
+      {
+          case SERVR_OPT:
+              if ( (wrflg | rdflg) || mode == CLIENT_MODE )
+              {
+                  return mixerr(argv[0]);
+              }
+              mode = SERVER_MODE;
+              flflg = addrflg = 0; /* we don't a filename, nor an address */
+              break;
+          case READ_OPT:
+              if ( mode == SERVER_MODE )
+              {
+                  return mixerr(argv[0]);
+              }
+              if ( wrflg )
+              {
+                  usage(argv[0]);
+                  return EXIT_FAILURE;
+              }
+              mode = CLIENT_MODE;
+              operation = READ;
+              rdflg = 1;
+              break;
+          case WRITE_OPT:
+              if ( mode == SERVER_MODE )
+              {
+                  return mixerr(argv[0]);
+              }
+              if ( rdflg )
+              {
+                  usage(argv[0]);
+                  return EXIT_FAILURE;
+              }
+              mode = CLIENT_MODE;
+              operation = WRITE;
+              wrflg = 1;
+              break;
+          case FILE_OPT:
+              if ( mode == SERVER_MODE )
+              {
+                  return mixerr(argv[0]);
+              }
+              mode = CLIENT_MODE;
+              filename = optarg;
+              flflg = 0;
+              break;
+          case ADDRESS_OPT:
+              if ( mode == SERVER_MODE )
+              {
+                  return mixerr(argv[0]);
+              }
+              if ( matchexpr(optarg, ADDRESS_PATTERN) )
+              {
+                  argerr(argv[0], opt, optarg);
+                  usage(argv[0]);
+                  return EXIT_FAILURE;
+              }
+              else
+              {
+                  address = optarg;
+              }
+              mode = CLIENT_MODE;
+              addrflg = 0;
+              break;
+          case PORT_OPT:
+              if ( matchexpr(optarg, PORT_PATTERN) )
+              {
+                  argerr(argv[0], opt, optarg);
+                  usage(argv[0]);
+                  return EXIT_FAILURE;
+              }
+              else
+              {
+                  port = atoi(optarg);
+              }
+              break;
+          case LOG_OPT:
+              log = 1;
+              logfile = DEF_LOG_FILE;
+              break;
+          case DEBUG_OPT:
+              debug = 1;
+          case VERBOSE_OPT:
+              verbose = 1;
+              break;
+          case '?':
+          default:
+              usage(argv[0]);
+              return EXIT_FAILURE;
+      }
   }
-  else if ( strcmp(ARG_WRITE, argv[1]) == 0 )
+  if ( flflg )
   {
-      if ( checkVars(argc, argv[3], argv[4]) )
-          return EXIT_FAILURE;
-      clientMode(WRITE, argv[2], argv[3], argv[4]);
+      fprintf(stderr, "CLIENT: No file set. "
+              "Use '-%c filename' option.\n", FILE_OPT);
+      usage(argv[0]);
+      return EXIT_FAILURE;
   }
-  else if ( strcmp(ARG_START_SERVR, argv[1]) == 0 )
+  if ( addrflg )
   {
-      if ( root_check()==-1 ) { return(0); }
-      serverMode(argv[2] == NULL ? 0 : atoi(argv[2]));
+      fprintf(stderr, "CLIENT: No address set. "
+              "Use '-%c address' option.\n", ADDRESS_OPT);
+      usage(argv[0]);
+      return EXIT_FAILURE;
   }
-  else
+  if ( mode == CLIENT_MODE && !rdflg && !wrflg )
   {
-      usage();
+      fprintf(stderr, "CLIENT: No operation set. "
+              "Use -%c or -%c option\n", READ_OPT, WRITE_OPT);
+      usage(argv[0]);
+      return EXIT_FAILURE;
+  }
+  if ( mode == SERVER_MODE )
+  {
+      server(port);
+  }
+  else // if (mode == CLIENT_MODE)
+  {
+      client(operation, filename, address, port);
   }
   return EXIT_SUCCESS;
 }
