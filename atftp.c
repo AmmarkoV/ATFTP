@@ -113,7 +113,7 @@ int
 main(int argc, char *argv[])
 {
   int opt, mode, operation, port = DEF_SERV_PORT, verbose = 0, log = 0, debug = 0;
-  int rdflg = 0, wrflg = 0, errflg = 0, addrflg = 1, flflg = 1; /* flags */
+  int rdflg = 0, wrflg = 0, addrflg = 1, flflg = 1; /* flags */
   char *filename, *logfile, *address;
   char options[] = { SERVR_OPT, READ_OPT, WRITE_OPT, PORT_OPT, NEED_ARG, LOG_OPT,
       ADDRESS_OPT, NEED_ARG, FILE_OPT, NEED_ARG, VERBOSE_OPT, DEBUG_OPT, '\0' };
