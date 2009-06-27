@@ -32,7 +32,7 @@ usage(const char* program)
       program = "yatftp";
   }
   printf("\n----------------------------------------------------------------------\n");
-  printf("YATFTP 0.19 - for code see link @ git://github.com/AmmarkoV/ATFTP.git\n");
+  printf("YATFTP 0.20 - for code see link @ git://github.com/AmmarkoV/ATFTP.git\n");
   printf("----------------------------------------------------------------------\n");
   printf("\nUsage for TFTP client : \n");
   printf("%s -%c -%c filename -%c address -%c port :\t "
