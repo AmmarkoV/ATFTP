@@ -705,6 +705,7 @@ TFTPServer(unsigned int port)
   }
   fromlen = sizeof (struct sockaddr_in);
   char filename[512];
+  unsigned int fork_res, packeterror = 0;
   /* check if root */
   if ( getuid() == ROOT_ID )
   {
@@ -712,7 +713,6 @@ TFTPServer(unsigned int port)
       setuid(1000);
       printf("Switched from root(uid=%d) to normal user(uid=%d)\n", ROOT_ID, getuid());
   }
-  unsigned int fork_res, packeterror = 0;
   while (1)
   {
       struct TFTP_PACKET request = { 0 };
@@ -794,12 +794,12 @@ TFTPClient(char * server_ip, unsigned port, const char * filename, const int ope
   if ( (operation != WRITE) && (operation != READ) )
   {
       printf("Wrong Client Operation \n");
-      return 1;
+      return EXIT_FAILURE;
   }
   if ( strlen(filename) <= 0 )
   {
       printf("Wrong filename \n");
-      return 1;
+      return EXIT_FAILURE;
   }
   int sock, length, n;
   struct sockaddr_in server;
@@ -853,11 +853,12 @@ TFTPClient(char * server_ip, unsigned port, const char * filename, const int ope
   from.sin_family = AF_INET;
   from.sin_addr.s_addr = INADDR_ANY;
 
-  unsigned int cl_port = 0;
+  unsigned cl_port = 0;
   cl_port = FindFreePortInRange(sock, &from);
   if ( (cl_port == 0) || (ntohs(from.sin_port) == 0) )
   {
-      printf("Client will be unable to receive messages , so it will now quit ( %u , %u ) \n", cl_port, ntohs(from.sin_port));
+      printf("Client will be unable to receive messages , so it will now quit ( %u , %u ) \n",
+             cl_port, ntohs(from.sin_port));
       exit(0);
   }
   // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
