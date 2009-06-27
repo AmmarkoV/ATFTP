@@ -38,7 +38,9 @@
 
 #define DEF_SERV_PORT 69
 #define MAX_FAILED_RETRIES 10
-
+#define DEF_LOG_FILE "tftp.log"
+#define ADDRESS_PATTERN "^\\([0-9]\\{1,3\\}\\.\\)\\{3\\}[0-9]\\{1,3\\}$"
+#define PORT_PATTERN "^[0-9]\\{1,5\\}$"
 #define SERVR_OPT 's'
 #define READ_OPT 'r'
 #define WRITE_OPT 'w'
@@ -47,21 +49,14 @@
 #define FILE_OPT 'f'
 #define LOG_OPT 'l'
 #define VERBOSE_OPT 'v'
+#define SILENT_OPT 'q'
 #define DEBUG_OPT 'd'
 #define NEED_ARG ':'
-
-#define DEF_LOG_FILE "tftp.log"
-#define ADDRESS_PATTERN "^\\([0-9]\\{1,3\\}\\.\\)\\{3\\}[0-9]\\{1,3\\}$"
-#define PORT_PATTERN "^[0-9]\\{1,5\\}$"
+#define _PNAME "yatfpt"
 
 enum values
 {
   ROOT_ID, READ, WRITE, SERVER_MODE, CLIENT_MODE,
-};
-
-enum errors
-{
-  USAGE_ERR, ROOT_ERR,
 };
 
 struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
@@ -94,6 +89,7 @@ struct ERROR_TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI
 unsigned int MINDATAPORT;
 unsigned int MAXDATAPORT;
 unsigned short verbosity;
+FILE *outstrm;
 
 int TFTPServer(unsigned int port);
 int TFTPClient(char * server, unsigned port, const char * filename, const int operation);
