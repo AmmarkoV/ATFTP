@@ -699,10 +699,19 @@ TFTPServer(unsigned int port)
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_port = htons(port);
 
-  if ( bind(sock, (struct sockaddr *) & server, length) < 0 ) error("binding master port for atftp!");
+  if ( bind(sock, (struct sockaddr *) & server, length) < 0 )
+  {
+      error("binding master port for atftp!");
+  }
   fromlen = sizeof (struct sockaddr_in);
   char filename[512];
-
+  /* check if root */
+  if ( getuid() == ROOT_ID )
+  {
+      //rootwarn();
+      setuid(1000);
+      printf("Switched from root(uid=%d) to normal user(uid=%d)\n", ROOT_ID, getuid());
+  }
   unsigned int fork_res, packeterror = 0;
   while (1)
   {

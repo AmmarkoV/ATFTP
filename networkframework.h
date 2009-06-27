@@ -56,7 +56,7 @@
 
 enum values
 {
-  ZERO, READ, WRITE, SERVER_MODE, CLIENT_MODE,
+  ROOT_ID, READ, WRITE, SERVER_MODE, CLIENT_MODE,
 };
 
 enum errors

@@ -118,12 +118,6 @@ main(int argc, char *argv[])
   char options[] = { SERVR_OPT, READ_OPT, WRITE_OPT, PORT_OPT, NEED_ARG, LOG_OPT,
       ADDRESS_OPT, NEED_ARG, FILE_OPT, NEED_ARG, VERBOSE_OPT, DEBUG_OPT, '\0' };
   extern char *optarg;
-  /* check if root */
-  if ( !getuid() )
-  {
-      rootwarn();
-      return EXIT_FAILURE;
-  }
   /* check no arguments */
   if ( argc < 2 )
   {
