@@ -36,6 +36,9 @@
 #include <regex.h>
 #include <unistd.h>
 
+#define _PNAME "yatfpt"
+#define MINDATAPORT 30000
+#define MAXDATAPORT 337000
 #define DEF_SERV_PORT 69
 #define MAX_FAILED_RETRIES 10
 #define DEF_LOG_FILE "tftp.log"
@@ -52,7 +55,6 @@
 #define SILENT_OPT 'q'
 #define DEBUG_OPT 'd'
 #define NEED_ARG ':'
-#define _PNAME "yatfpt"
 
 enum values
 {
@@ -86,13 +88,11 @@ struct ERROR_TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI
   char data[512];
 };
 
-unsigned int MINDATAPORT;
-unsigned int MAXDATAPORT;
-/* verbosity levels
- * 3 Trivial Debug messages,
- * 2 Status Messages,
+/* verbosity levels:
+ * 0 No messages at all,
  * 1 Error Messages,
- * 0 No messages at all */
+ * 2 +Status Messages,
+ * 3 +Trivial Debug messages */
 unsigned short verbosity;
 FILE *outstrm;
 

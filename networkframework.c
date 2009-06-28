@@ -20,43 +20,26 @@
 
 #include "networkframework.h"
 
-unsigned int MINDATAPORT = 30000;
-unsigned int MAXDATAPORT = 37000;
-
-//     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//
-//                      GENERIC FUNCTIONS  PART 
-//
-//     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+/* ********************** *
+ * GENERIC FUNCTIONS PART *
+ * ********************** */
 
 int inline
 trivial_msg()
 {
-  if ( verbosity >= 3 )
-  {
-      return 1;
-  }
-  return 0;
+  return verbosity > 2;
 }
 
 int inline
 debug_msg()
 {
-  if ( verbosity >= 2 )
-  {
-      return 1;
-  }
-  return 0;
+  return verbosity > 1;
 }
 
 int inline
 error_msg()
 {
-  if ( verbosity >= 1 )
-  {
-      return 1;
-  }
-  return 0;
+  return verbosity > 0;
 }
 
 void
@@ -70,7 +53,7 @@ error(char *msg)
   exit(0);
 }
 
-void
+void inline
 clear_error()
 {
   errno = 0;
@@ -113,8 +96,7 @@ printerror(int errnum)
 }
 
 /* check if $filename exists and can be read,
- * if it can be read, then it can be sent
- */
+ * if it can be read, then it can be sent */
 int
 fcheck(const char* filename)
 {
@@ -128,7 +110,7 @@ OpCodeValidTFTP(unsigned char op1, unsigned char op2)
   {
       fprintf(outstrm, "Wrong TFTP magic number! %u \n", op1);
       fflush(stdout);
-      return 1;
+      return EXIT_FAILURE;
   }
   else
   {
@@ -150,11 +132,11 @@ OpCodeValidTFTP(unsigned char op1, unsigned char op2)
               if ( debug_msg() ) fprintf(outstrm, "ERROR - Error Request\n");
               break;
           default:
-              return 1;
+              return EXIT_FAILURE;
               break;
       };
   }
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int
@@ -186,7 +168,7 @@ ReceiveNullACK(int server_sock, struct sockaddr_in * client_sock, int client_len
           fprintf(outstrm, "Error while receiving null acknowledgement \n");
           printerror(errno);
           ++retransmit_attempts;
-          return -1;
+          return EXIT_FAILURE;
       }
       else
       {
@@ -216,7 +198,7 @@ ReceiveNullACK(int server_sock, struct sockaddr_in * client_sock, int client_len
   if ( ntohs(recv_tmp.sin_port) == 0 )
   {
       fprintf(outstrm, "Null acknowledgement returned null port , failed..\n");
-      return -1;
+      return EXIT_FAILURE;
   }
   else
   {
@@ -225,8 +207,7 @@ ReceiveNullACK(int server_sock, struct sockaddr_in * client_sock, int client_len
                   inet_ntoa(recv_tmp.sin_addr), ntohs(recv_tmp.sin_port), recv_tmp.sin_family);
       *client_sock = recv_tmp;
   }
-
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int
@@ -369,7 +350,7 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
               {
                   fprintf(outstrm, "Error while reading file %s \n", filename);
                   fclose(filetotransmit);
-                  return 1;
+                  return EXIT_FAILURE;
               }
               //SEND DATA STO ALLO MELLOS TOU SESSION
               ++request.Block;
@@ -386,7 +367,7 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
               fprintf(outstrm, "Error while sending file %s ( conn family %i  , AF_INET = %i)", filename, client_send_sockaddr.sin_family, AF_INET);
               printerror(errno);
               fclose(filetotransmit);
-              return 1;
+              return EXIT_FAILURE;
           }
 
           //RECEIVE ACKNOWLEDGMENT!
@@ -400,7 +381,7 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
               fprintf(outstrm, "Error while receiving acknowledgement for file %s \n", filename);
               printerror(errno);
               ++retransmit_attempts;
-              return 1;
+              return EXIT_FAILURE;
           }
           else
           {
@@ -425,11 +406,11 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
   else
   {
       fprintf(outstrm, "Could not open file %s \n", filename);
-      return 1;
+      return EXIT_FAILURE;
   }
   if ( debug_msg() )
       fprintf(outstrm, "TransmitTFTPFile has finished\n");
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int
@@ -487,7 +468,7 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
               fprintf(outstrm, "Error while receiving file %s \n", filename);
               printerror(errno);
               fclose(filetotransmit);
-              return 1;
+              return EXIT_FAILURE;
           }
           else
           {
@@ -518,7 +499,7 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
           {
               fprintf(outstrm, "Error while writing file %s \n", filename);
               fclose(filetotransmit);
-              return 1;
+              return EXIT_FAILURE;
           }
           //SEND ACKNOWLEDGMENT
           ++ackpacket.Block;
@@ -532,7 +513,7 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
           {
               fprintf(outstrm, "Error while sending acknowledgment %s ", filename);
               fclose(filetotransmit);
-              return 1;
+              return EXIT_FAILURE;
           }
       }
       fclose(filetotransmit);
@@ -540,11 +521,11 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
   else
   {
       fprintf(outstrm, "Could not open file %s \n", filename);
-      return 1;
+      return EXIT_FAILURE;
   }
   if ( debug_msg() )
       fprintf(outstrm, "ReceiveTFTPFile has finished\n");
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 //     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -886,5 +867,5 @@ TFTPClient(char * server_ip, unsigned port, const char * filename, const int ope
   }
   fprintf(outstrm, "Stopping TFTP client..\n");
   // shutdown(sock, 2);
-  return (0);
+  return EXIT_SUCCESS;
 }
