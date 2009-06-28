@@ -36,7 +36,7 @@
 #include <regex.h>
 #include <unistd.h>
 
-#define _PNAME "yatfpt"
+#define _PNAME "yatftp"
 #define ROOT_ID 0
 #define MINDATAPORT 30000
 #define MAXDATAPORT 337000

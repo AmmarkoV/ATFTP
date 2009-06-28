@@ -694,7 +694,7 @@ TFTPServer(unsigned int port)
 
   if ( bind(sock, (struct sockaddr *) & server, length) < 0 )
   {
-      error("binding master port for atftp!");
+      error("binding master port for yatftp!");
   }
   fromlen = sizeof (struct sockaddr_in);
   char filename[512];
