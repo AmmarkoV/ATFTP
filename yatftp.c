@@ -27,24 +27,24 @@
 void
 usage()
 {
-  fprintf(outstrm,
+  fprintf(stderr,
           "\n----------------------------------------------------------------------\n"
           "YATFTP 0.20 - for code see link @ git://github.com/AmmarkoV/ATFTP.git\n"
           "----------------------------------------------------------------------\n");
-  fprintf(outstrm, "\nUsage for TFTP client : \n"
+  fprintf(stderr, "\nUsage for TFTP client : \n"
           "%s -%c -%c filename -%c address -%c port :\t "
           "read filename from address @ port \n",
           _PNAME, READ_OPT, FILE_OPT, ADDRESS_OPT, PORT_OPT);
-  fprintf(outstrm, "%s -%c -%c filename -%c address -%c port :\t "
+  fprintf(stderr, "%s -%c -%c filename -%c address -%c port :\t "
           "write filename to address @ port \n",
           _PNAME, WRITE_OPT, FILE_OPT, ADDRESS_OPT, PORT_OPT);
-  fprintf(outstrm, "\nUsage for TFTP server : \n"
+  fprintf(stderr, "\nUsage for TFTP server : \n"
           "%s -%c [-%c port] :\t "
           "begin tftp server binded @ port (default #port %d)\n",
           _PNAME, SERVR_OPT, PORT_OPT, DEF_SERV_PORT);
-  fprintf(outstrm, "\nCommon Options : \n"
+  fprintf(stderr, "\nCommon Options : \n"
           "-%c :\t log output to file %s\n", LOG_OPT, DEF_LOG_FILE);
-  fprintf(outstrm, "-%c :\t silent mode, don't print any output\n"
+  fprintf(stderr, "-%c :\t silent mode, don't print any output\n"
           "-%c :\t use verbose output\n-%c :\t use debug output\n",
           SILENT_OPT, VERBOSE_OPT, DEBUG_OPT);
 }
@@ -63,7 +63,7 @@ matchexpr(const char* expression, const char* pattern)
 int
 mixerr()
 {
-  fprintf(outstrm, "%s: Wrong arguments. Do not mix server/client options\n", _PNAME);
+  fprintf(stderr, "%s: Wrong arguments. Do not mix server/client options\n", _PNAME);
   usage();
   return EXIT_FAILURE;
 }
@@ -71,20 +71,20 @@ mixerr()
 void
 argerr(char option, char* expr)
 {
-  fprintf(outstrm, "%s: Wrong argument for -%c option: %s\n", _PNAME, option, expr);
+  fprintf(stderr, "%s: Wrong argument for -%c option: %s\n", _PNAME, option, expr);
 }
 
 void
 client(const int operation, const char* filename, char* address, int port)
 {
-  printf("Starting TFTP Client.. \n\n");
+  fprintf(outstrm, "Starting TFTP Client.. \n\n");
   TFTPClient(address, port, filename, operation);
 }
 
 void
 server(unsigned servr_port)
 {
-  printf("Starting TFTP Server at port %u .. \n\n", servr_port);
+  fprintf(outstrm, "Starting TFTP Server at port %u .. \n\n", servr_port);
   TFTPServer(servr_port);
 }
 
@@ -92,7 +92,7 @@ int
 main(int argc, char *argv[])
 {
   extern char *optarg;
-  outstrm = stderr;
+  outstrm = stdout;
   int opt, mode, operation, port = DEF_SERV_PORT,
           rdflg = 0, wrflg = 0, addrflg = 1, flflg = 1;
   char *filename, *address, options[] = { SERVR_OPT, READ_OPT, WRITE_OPT,
@@ -190,21 +190,21 @@ main(int argc, char *argv[])
   }
   if ( flflg )
   {
-      fprintf(outstrm, "CLIENT: No file set. "
+      fprintf(stderr, "CLIENT: No file set. "
               "Use '-%c filename' option.\n", FILE_OPT);
       usage();
       return EXIT_FAILURE;
   }
   if ( addrflg )
   {
-      fprintf(outstrm, "CLIENT: No address set. "
+      fprintf(stderr, "CLIENT: No address set. "
               "Use '-%c address' option.\n", ADDRESS_OPT);
       usage();
       return EXIT_FAILURE;
   }
   if ( mode == CLIENT_MODE && !rdflg && !wrflg )
   {
-      fprintf(outstrm, "CLIENT: No operation set. "
+      fprintf(stderr, "CLIENT: No operation set. "
               "Use -%c or -%c option\n", READ_OPT, WRITE_OPT);
       usage();
       return EXIT_FAILURE;

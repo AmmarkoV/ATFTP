@@ -88,6 +88,11 @@ struct ERROR_TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI
 
 unsigned int MINDATAPORT;
 unsigned int MAXDATAPORT;
+/* verbosity levels
+ * 3 Trivial Debug messages,
+ * 2 Status Messages,
+ * 1 Error Messages,
+ * 0 No messages at all */
 unsigned short verbosity;
 FILE *outstrm;
 
