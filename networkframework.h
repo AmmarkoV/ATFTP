@@ -37,10 +37,11 @@
 #include <unistd.h>
 
 #define _PNAME "yatfpt"
+#define ROOT_ID 0
 #define MINDATAPORT 30000
 #define MAXDATAPORT 337000
-#define DEF_SERV_PORT 69
 #define MAX_FAILED_RETRIES 10
+#define DEF_SERV_PORT 69
 #define DEF_LOG_FILE "tftp.log"
 #define ADDRESS_PATTERN "^\\([0-9]\\{1,3\\}\\.\\)\\{3\\}[0-9]\\{1,3\\}$"
 #define PORT_PATTERN "^[0-9]\\{1,5\\}$"
@@ -58,7 +59,7 @@
 
 enum values
 {
-  ROOT_ID, READ, WRITE, SERVER_MODE, CLIENT_MODE,
+  READ = 1, WRITE, SERVER_MODE, CLIENT_MODE,
 };
 
 struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI

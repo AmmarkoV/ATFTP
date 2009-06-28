@@ -47,10 +47,10 @@ error(char *msg)
 {
   if ( !error_msg() )
   {
-      exit(0);
+      exit(EXIT_SUCCESS);
   }
   perror(msg);
-  exit(0);
+  exit(EXIT_SUCCESS);
 }
 
 void inline
@@ -148,9 +148,11 @@ ReceiveNullACK(int server_sock, struct sockaddr_in * client_sock, int client_len
   //          2 bytes   2 bytes
   // ACK    | opcode | block #
   //            A         B
-  /* A part */ ackpacket.Op1 = 0;
+  /* A part */
+  ackpacket.Op1 = 0;
   ackpacket.Op2 = 4;
-  /* B part */ ackpacket.Block = 0;
+  /* B part */
+  ackpacket.Block = 0;
   // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   int datarecv, retransmit_attempts = 1;
   struct sockaddr_in recv_tmp;
@@ -165,14 +167,16 @@ ReceiveNullACK(int server_sock, struct sockaddr_in * client_sock, int client_len
       datarecv = recvfrom(server_sock, (char*) & ackpacket, 4, 0, (struct sockaddr *) & recv_tmp, & client_length);
       if ( datarecv < 0 )
       {
-          fprintf(outstrm, "Error while receiving null acknowledgement \n");
+          if ( error_msg() )
+              fprintf(outstrm, "Error while receiving null acknowledgement \n");
           printerror(errno);
           ++retransmit_attempts;
           return EXIT_FAILURE;
       }
       else
       {
-          if ( debug_msg() ) fprintf(outstrm, "Received acknowledgement for block %u ( waiting for 0 ) \n", ackpacket.Block);
+          if ( debug_msg() )
+              fprintf(outstrm, "Received acknowledgement for block %u ( waiting for 0 ) \n", ackpacket.Block);
           if ( (ackpacket.Op1 != 0) || (ackpacket.Op2 != 4) )
           {
               fprintf(outstrm, "\nWrong Packet %u %u ( instead of 0 4 )!\n", ackpacket.Op1, ackpacket.Op2);
@@ -235,14 +239,23 @@ TransmitError(char * message, unsigned short errorcode, int sock, struct sockadd
   error.ErrorCode = ntohs(error.ErrorCode); // EPISTREFOUME STO DIKO MAS BYTE ORDER
   if ( n < 0 )
   {
-      fprintf(outstrm, "Failed to transmit error message! , no retries \n ");
+      if ( error_msg() )
+          fprintf(outstrm, "Failed to transmit error message! , no retries \n ");
       printerror(errno);
+      return EXIT_FAILURE;
   }
   else if ( n < strlen(message) + 4 )
-      fprintf(outstrm, "Failed to transmit complete error message! , no retries \n ");
+  {
+      if ( error_msg() )
+          fprintf(outstrm, "Failed to transmit complete error message! , no retries \n ");
+      return EXIT_FAILURE;
+  }
   else if ( debug_msg() )
+  {
       fprintf(outstrm, "Tried my best to forward error message! , no retries \n ");
-  return;
+      return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
 }
 
 int
@@ -263,7 +276,8 @@ FindFreePortInRange(int thesock, struct sockaddr_in* server)
       }
       else
       {
-          if ( debug_msg() ) fprintf(outstrm, "Binding to port number %u is OK \n", cl_port);
+          if ( debug_msg() )
+              fprintf(outstrm, "Binding to port number %u is OK \n", cl_port);
           break;
       }
   }
@@ -283,8 +297,10 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
   clear_error();
   struct sockaddr_in client_send_sockaddr;
   client_send_sockaddr = *client_pout_sock;
-  if ( debug_msg() ) fprintf(outstrm, "TransmitTFTPFile ( Opening local file for read ) called\n");
-  if ( debug_msg() ) fprintf(outstrm, "TransmitTFTPFile to %s port %u\n", inet_ntoa(client_send_sockaddr.sin_addr), ntohs(client_send_sockaddr.sin_port));
+  if ( debug_msg() )
+      fprintf(outstrm, "TransmitTFTPFile ( Opening local file for read ) called\n");
+  if ( debug_msg() )
+      fprintf(outstrm, "TransmitTFTPFile to %s port %u\n", inet_ntoa(client_send_sockaddr.sin_addr), ntohs(client_send_sockaddr.sin_port));
   FILE *filetotransmit;
   filetotransmit = fopen(filename, "rb");
   unsigned int retransmit_attempts = 0;
@@ -299,17 +315,20 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
 
       if ( debug_msg() )
           fprintf(outstrm, "Requested file ( %s ) for transmission has %u bytes size!\n", filename, filesize);
-      if ( (filesize % 512 == 0) && (filesize != 0) && debug_msg() )
-          fprintf(outstrm, "File size is a multiple of 512 should append a zero data package \n");
+      if ( (filesize % 512 == 0) && (filesize != 0) )
+          if ( debug_msg() )
+              fprintf(outstrm, "File size is a multiple of 512 should append a zero data package \n");
       //FILE SIZE OK
       // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       struct ACK_TFTP_PACKET ackpacket;
       //          2 bytes   2 bytes
       // ACK    | opcode | block #
       //            A         B
-      /* A part */ ackpacket.Op1 = 0;
+      /* A part */
+      ackpacket.Op1 = 0;
       ackpacket.Op2 = 4;
-      /* B part */ ackpacket.Block = 0;
+      /* B part */
+      ackpacket.Block = 0;
       // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
       // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -317,17 +336,21 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
       //          2 bytes   2 bytes    n bytes
       // DATA   | opcode | block # |  Data
       //            A         B         C
-      /* A part */ request.Op1 = 0;
+      /* A part */
+      request.Op1 = 0;
       request.Op2 = 3;
-      /* B part */ request.Block = 0;
-      /* C part */ request.data[0] = 0;
+      /* B part */
+      request.Block = 0;
+      /* C part */
+      request.data[0] = 0;
       // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       filepos = 0;
       datatrans = 0;
 
       struct sockaddr_in client_in_sock;
 
-      while ((filepos < filesize) || ((retransmit_attempts != 0) && (retransmit_attempts < MAX_FAILED_RETRIES))
+      while ((filepos < filesize)
+             || ((retransmit_attempts != 0) && (retransmit_attempts < MAX_FAILED_RETRIES))
              || ((filepos >= filesize) && (dataread == 512)))
       {
           //ORIAKI PERIPTWSI POU TO TELEYTAIO MINIMA EINAI 512 Byte
@@ -357,14 +380,17 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
               filepos += dataread;
           } // AN DEN KANOUME RENTRASMIT TOTE DIAVAZOUME KAINOURGIO BLOCK APO TO ARXEIO 
 
-          if ( trivial_msg() ) fprintf(outstrm, "Sending data %u , block %u \n", dataread + 4, request.Block);
+          if ( trivial_msg() )
+              fprintf(outstrm, "Sending data %u , block %u \n", dataread + 4, request.Block);
           fflush(stdout);
           request.Block = htons(request.Block); // METATREPOUME SE NETWORK BYTE ORDER GIA NA KATALAVAINEI I ALLI MIXANI
           datatrans = sendto(server_sock, (const char*) & request, dataread + 4, 0, (struct sockaddr *) & client_send_sockaddr, client_length);
           request.Block = ntohs(request.Block); // METATREPOUME SE DIKO MAS BYTE ORDER GIA NA KATALAVAINOUME EMEIS
           if ( datatrans < 0 )
           {
-              fprintf(outstrm, "Error while sending file %s ( conn family %i  , AF_INET = %i)", filename, client_send_sockaddr.sin_family, AF_INET);
+              if ( error_msg() )
+                  fprintf(outstrm, "Error while sending file %s ( conn family %i  , AF_INET = %i)",
+                          filename, client_send_sockaddr.sin_family, AF_INET);
               printerror(errno);
               fclose(filetotransmit);
               return EXIT_FAILURE;
@@ -378,7 +404,8 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
           ackpacket.Block = ntohs(ackpacket.Block); // METATREPOUME SE DIKO MAS BYTE ORDER GIA NA KATALAVAINOUME TI ENNOEI O PEER
           if ( datarecv < 0 )
           {
-              fprintf(outstrm, "Error while receiving acknowledgement for file %s \n", filename);
+              if ( error_msg() )
+                  fprintf(outstrm, "Error while receiving acknowledgement for file %s \n", filename);
               printerror(errno);
               ++retransmit_attempts;
               return EXIT_FAILURE;
@@ -389,11 +416,13 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
                   fprintf(outstrm, "Received ack ( size %u ) for block %u , currently @ %u \n", datarecv, ackpacket.Block, request.Block);
               if ( (ackpacket.Op1 != 0) || (ackpacket.Op2 != 4) )
               {
-                  fprintf(outstrm, "Incorrent acknowledgment magic numbers ( %u %u instead of 0 4 )  \n", ackpacket.Op1, ackpacket.Op2);
+                  if ( error_msg() )
+                      fprintf(outstrm, "Incorrent acknowledgment magic numbers ( %u %u instead of 0 4 )  \n", ackpacket.Op1, ackpacket.Op2);
               }
               else if ( ackpacket.Block != request.Block )
               {
-                  fprintf(outstrm, "\n\nOut of sync acknowledge Should send error ( todo ).!\n\n");
+                  if ( error_msg() )
+                      fprintf(outstrm, "\n\nOut of sync acknowledge Should send error ( todo ).!\n\n");
               }
               retransmit_attempts = 0;
           }
@@ -405,7 +434,8 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
   }
   else
   {
-      fprintf(outstrm, "Could not open file %s \n", filename);
+      if ( error_msg() )
+          fprintf(outstrm, "Could not open file %s \n", filename);
       return EXIT_FAILURE;
   }
   if ( debug_msg() )
@@ -423,6 +453,9 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
       fprintf(outstrm, "ReceiveTFTPFile  ( Opening local file for write )  called\n");
   if ( debug_msg() )
       fprintf(outstrm, "ReceiveTFTPFile from %s port %u\n", inet_ntoa(client_send_sockaddr.sin_addr), ntohs(client_send_sockaddr.sin_port));
+  if ( (debug_msg()) && (ntohs(client_send_sockaddr.sin_port) == 0) )
+      fprintf(outstrm, "In case you are running the client and you see 0.0.0.0 and port 0 thats normal , we havent got a packet yet!");
+
   FILE *filetotransmit;
   filetotransmit = fopen(filename, "wb");
   if ( filetotransmit != NULL )
@@ -435,9 +468,11 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
       //          2 bytes   2 bytes
       // ACK    | opcode | block #
       //            A         B
-      /* A part */ ackpacket.Op1 = 0;
+      /* A part */
+      ackpacket.Op1 = 0;
       ackpacket.Op2 = 4;
-      /* B part */ ackpacket.Block = 0;
+      /* B part */
+      ackpacket.Block = 0;
       // MAKE ACK TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
       // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -445,10 +480,13 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
       //          2 bytes   2 bytes    n bytes
       // DATA   | opcode | block # |  Data
       //            A         B         C
-      /* A part */ request.Op1 = 0;
+      /* A part */
+      request.Op1 = 0;
       request.Op2 = 3;
-      /* B part */ request.Block = 0;
-      /* C part */ request.data[0] = 0;
+      /* B part */
+      request.Block = 0;
+      /* C part */
+      request.data[0] = 0;
       // MAKE DATA TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       filepos = 0;
       datatrans = 0;
@@ -465,7 +503,8 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
 
           if ( datarecv < 0 )
           {
-              fprintf(outstrm, "Error while receiving file %s \n", filename);
+              if ( error_msg() )
+                  fprintf(outstrm, "Error while receiving file %s \n", filename);
               printerror(errno);
               fclose(filetotransmit);
               return EXIT_FAILURE;
@@ -487,12 +526,14 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
           //READ DATA
           if ( datarecv - 4 == 0 )
           {
-              fprintf(outstrm, "Will not write to file zero .. \n");
+              if ( error_msg() )
+                  fprintf(outstrm, "Will not write to file zero .. \n");
           }
           else
           {
               datawrite = fwrite(request.data, 1, datarecv - 4, filetotransmit);
-              /*fprintf(outstrm, "Data2Write(%s)\n",request.data); fflush(stdout);*/
+              /* fprintf(outstrm, "Data2Write(%s)\n",request.data);
+               * fflush(stdout); */
           }
 
           if ( datawrite != 512 && ferror(filetotransmit) )
@@ -511,7 +552,8 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
           ackpacket.Block = ntohs(ackpacket.Block); // METATREPOUME SE DIKO MAS BYTE ORDER GIA NA KATALAVAINOUME TI ENNOEI O PEER
           if ( datatrans < 0 )
           {
-              fprintf(outstrm, "Error while sending acknowledgment %s ", filename);
+              if ( error_msg() )
+                  fprintf(outstrm, "Error while sending acknowledgment %s ", filename);
               fclose(filetotransmit);
               return EXIT_FAILURE;
           }
@@ -520,7 +562,8 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
   }
   else
   {
-      fprintf(outstrm, "Could not open file %s \n", filename);
+      if ( error_msg() )
+          fprintf(outstrm, "Could not open file %s \n", filename);
       return EXIT_FAILURE;
   }
   if ( debug_msg() )
@@ -528,12 +571,9 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
   return EXIT_SUCCESS;
 }
 
-//     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//
-//                      SERVER  PART 
-//
-//     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+/* *********** *
+ * SERVER PART *
+ * *********** */
 int
 HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, int operation)
 {
@@ -545,23 +585,26 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
   clsock = socket(AF_INET, SOCK_DGRAM, 0);
   if ( clsock < 0 )
   {
-      fprintf(outstrm, "Unable to handle new client ( could not create socket ).. :( \n");
+      if ( error_msg() )
+          fprintf(outstrm, "Unable to handle new client ( could not create socket ).. :( \n");
       fflush(stdout);
-      exit(0);
+      exit(EXIT_SUCCESS);
   }
   //SET TIMEOUT FOR OPERTATIONS
   struct timeval timeout_time = { 0 };
   timeout_time.tv_sec = 20;
-  int i = setsockopt(clsock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
-  if ( i != 0 )
+  int reslt = setsockopt(clsock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
+  if ( reslt != 0 )
   {
-      fprintf(outstrm, "Error setting receive Timeout for serving socket \n");
+      if ( error_msg() )
+          fprintf(outstrm, "Error setting receive Timeout for serving socket \n");
       printerror(errno);
   }
-  i = setsockopt(clsock, SOL_SOCKET, SO_SNDTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
-  if ( i != 0 )
+  reslt = setsockopt(clsock, SOL_SOCKET, SO_SNDTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
+  if ( reslt != 0 )
   {
-      fprintf(outstrm, "Error setting send Timeout for serving socket \n");
+      if ( error_msg() )
+          fprintf(outstrm, "Error setting send Timeout for serving socket \n");
       printerror(errno);
   }
   //SET TIMEOUT FOR OPERTATIONS
@@ -575,8 +618,9 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
   cl_port = FindFreePortInRange(clsock, &server);
   if ( (cl_port == 0) || (ntohs(server.sin_port) == 0) )
   {
-      fprintf(outstrm, "Server  will be unable to receive messages , so it will now quit ( %u , %u ) \n", cl_port, ntohs(server.sin_port));
-      exit(0);
+      if ( error_msg() )
+          fprintf(outstrm, "Server  will be unable to receive messages , so it will now quit ( %u , %u ) \n", cl_port, ntohs(server.sin_port));
+      exit(EXIT_SUCCESS);
   }
   // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
   if ( operation == WRITE )
@@ -594,18 +638,23 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
       ackpacket.Block = 0;
       // MAKE TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 
       froml = sizeof (struct sockaddr_in); // <- KAKO DN KANEI :P
-      errno = 0;
+      clear_error();
       if ( debug_msg() )
           fprintf(outstrm, "Trying to send null ack to address %s port %u\n", inet_ntoa(fromsock.sin_addr), ntohs(fromsock.sin_port));
       n = sendto(clsock, (const char*) & ackpacket, 4, 0, (struct sockaddr *) & fromsock, froml);
       if ( n < 0 )
       {
-          fprintf(outstrm, "Could not send initial null acknowledge to reveal my port.. , failed \n");
+          if ( error_msg() )
+              fprintf(outstrm, "Could not send initial null acknowledge to reveal my port.. , failed \n");
           printerror(errno);
-          exit(0);
+          exit(EXIT_SUCCESS);
       }
-      else if ( debug_msg() )
-          fprintf(outstrm, "I just sent initial null acknowledgment to port %u \n", ntohs(fromsock.sin_port));
+      else
+      {
+          if ( debug_msg() )
+              fprintf(outstrm, "I just sent initial null acknowledgment to port %u \n",
+                      ntohs(fromsock.sin_port));
+      }
   }
 
   if ( operation == WRITE ) // WRQ
@@ -621,7 +670,7 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
   //shutdown(clsock, 2);
   if ( debug_msg() )
       fprintf(outstrm, "Stopping handle client thread\n");
-  exit(0);
+  exit(EXIT_SUCCESS);
 }
 
 int
@@ -650,16 +699,11 @@ TFTPServer(unsigned int port)
   fromlen = sizeof (struct sockaddr_in);
   char filename[512];
   unsigned int fork_res, packeterror = 0;
-  /* check if root */
-  if ( getuid() == ROOT_ID )
-  {
-      setuid(1000);
-      fprintf(outstrm, "Switched from root(uid=%d) to normal user(uid=%d)\n", ROOT_ID, getuid());
-  }
   while (1)
   {
       struct TFTP_PACKET request = { 0 };
-      if ( debug_msg() ) fprintf(outstrm, "\n Waiting for a tftp client \n");
+      if ( debug_msg() )
+          fprintf(outstrm, "\n Waiting for a tftp client \n");
       n = recvfrom(sock, (char*) & request, sizeof (request), 0, (struct sockaddr *) & from, &fromlen);
       if ( n < 0 )
           error("recvfrom");
@@ -687,18 +731,18 @@ TFTPServer(unsigned int port)
       else if ( fnm_end == 0 )
       {
           packeterror = 1;
-          fprintf(outstrm, "Null filename.. , failing packet \n");
+          if ( error_msg() )
+              fprintf(outstrm, "Null filename.. , failing packet \n");
           TransmitError("Null filename ", 3, sock, &from);
       }
       // DISASSEMBLE TFTP PACKET! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-
       if ( packeterror == 0 )
       {
           fork_res = fork();
           if ( fork_res < 0 )
           {
-              fprintf(outstrm, "Could not fork server , client will fail\n");
+              if ( error_msg() )
+                  fprintf(outstrm, "Could not fork server , client will fail\n");
               TransmitError("Cannot fork accept connection", 1, sock, &from);
           }
           else if ( fork_res == 0 )
@@ -708,6 +752,12 @@ TFTPServer(unsigned int port)
               if ( debug_msg() )
                   fprintf(outstrm, "New UDP server fork to serve file %s , operation type %u \n", filename, request.Op2);
               fflush(stdout);
+              /* check if root */
+              if ( getuid() == ROOT_ID )
+              {
+                  setuid(1000);
+                  fprintf(outstrm, "Switched from root(uid=%d) to normal user(uid=%d)\n", ROOT_ID, getuid());
+              }
               HandleClient(filename, f_fromlen, f_from, request.Op2);
           }
           else
@@ -722,28 +772,25 @@ TFTPServer(unsigned int port)
           write(1, request.data, n - 2);
       }
   }
-  return;
+  return EXIT_SUCCESS;
 }
 
-//     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//
-//                      CLIENT  PART 
-//
-//     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-// AN OPERATION = 1 read | An OPERATION = 2 write
-
+/* *********** *
+ * CLIENT PART *
+ * *********** */
 int
 TFTPClient(char * server_ip, unsigned port, const char * filename, const int operation)
 {
   if ( (operation != WRITE) && (operation != READ) )
   {
-      fprintf(outstrm, "Wrong Client Operation \n");
+      if ( error_msg() )
+          fprintf(outstrm, "Wrong Client Operation \n");
       return EXIT_FAILURE;
   }
   if ( strlen(filename) <= 0 )
   {
-      fprintf(outstrm, "Wrong filename \n");
+      if ( error_msg() )
+          fprintf(outstrm, "Wrong filename \n");
       return EXIT_FAILURE;
   }
   int sock, length, n;
@@ -752,23 +799,25 @@ TFTPClient(char * server_ip, unsigned port, const char * filename, const int ope
   sock = socket(AF_INET, SOCK_DGRAM, 0);
   if ( sock < 0 )
   {
-      fprintf(outstrm, "Error creating socket for TFTP connection , failed.. \n");
+      if ( error_msg() )
+          fprintf(outstrm, "Error creating socket for TFTP connection , failed.. \n");
       printerror(errno);
-      exit(0);
+      exit(EXIT_SUCCESS);
   }
   struct timeval timeout_time = { 0 };
   timeout_time.tv_sec = 20;
-  int i = 0;
-  i = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
-  if ( i != 0 )
+  int reslt = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
+  if ( reslt != 0 )
   {
-      fprintf(outstrm, "Error setting receive Timeout for client socket \n");
+      if ( error_msg() )
+          fprintf(outstrm, "Error setting receive Timeout for client socket \n");
       printerror(errno);
   }
-  i = setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
-  if ( i != 0 )
+  reslt = setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
+  if ( reslt != 0 )
   {
-      fprintf(outstrm, "Error setting send Timeout for client socket \n");
+      if ( error_msg() )
+          fprintf(outstrm, "Error setting send Timeout for client socket \n");
       printerror(errno);
   }
 
@@ -800,9 +849,10 @@ TFTPClient(char * server_ip, unsigned port, const char * filename, const int ope
   cl_port = FindFreePortInRange(sock, &from);
   if ( (cl_port == 0) || (ntohs(from.sin_port) == 0) )
   {
-      fprintf(outstrm, "Client will be unable to receive messages , so it will now quit ( %u , %u ) \n",
-              cl_port, ntohs(from.sin_port));
-      exit(0);
+      if ( error_msg() )
+          fprintf(outstrm, "Client will be unable to receive messages , so it will now quit ( %u , %u ) \n",
+                  cl_port, ntohs(from.sin_port));
+      exit(EXIT_SUCCESS);
   }
   // BIND CODE GIA NA LAMVANOUME TA MINIMATA APO TON SERVER
 
@@ -843,29 +893,31 @@ TFTPClient(char * server_ip, unsigned port, const char * filename, const int ope
   n = sendto(sock, (const char*) & request, fnm_end + 2, 0, (struct sockaddr *) & server, length);
   if ( n < 0 )
   {
-      fprintf(outstrm, "Error sending initial TFTP packet , failed.. \n");
+      if ( error_msg() )
+          fprintf(outstrm, "Error sending initial TFTP packet , failed.. \n");
       printerror(errno);
-      exit(0);
+      exit(EXIT_SUCCESS);
   }
   //Mexri edw exoume steilei i RRQ , i WRQ to opoio einai sigouro..
   // Vazoume from anti server giati o server einai i socket pros to port 69 , to from einai to 2o port
-  if ( operation == READ ) // READ OPERATION
+  if ( operation == READ )
   {
       ReceiveTFTPFile(filename, sock, &to, length);
   }
-  else if ( operation == WRITE ) // WRITE OPERATION
+  else if ( operation == WRITE )
   {
-      int i = ReceiveNullACK(sock, &to, length); // Fortwnoume sto to , pou theloume na stelnoume to minima mas!
-      if ( i == -1 )
+      if ( ReceiveNullACK(sock, &to, length) )
       {
-          fprintf(outstrm, "Cannot receive zero acknowledge to start file transmission , failing..");
+          if ( error_msg() )
+              fprintf(outstrm, "Cannot receive zero acknowledge to start file transmission , failing..");
       }
       else
       {
           TransmitTFTPFile(filename, sock, &to, length);
       }
   }
-  fprintf(outstrm, "Stopping TFTP client..\n");
+  if ( debug_msg() )
+      fprintf(outstrm, "Stopping TFTP client..\n");
   // shutdown(sock, 2);
   return EXIT_SUCCESS;
 }
