@@ -28,7 +28,7 @@ void
 usage()
 {
   printf("-----------------------------------------------------\n");
-  printf("AC-TFTP 0.20 - for code \t git://github.com/AmmarkoV/ATFTP.git   \n");
+  printf("A-TFTP 0.20 stable branch - for code \t git://github.com/AmmarkoV/ATFTP.git   \n");
   printf("-----------------------------------------------------\n");
   printf("Usage for TFTP client : \n");
   printf("atftp %s filename address port \t- read filename from address @ port \n", ARG_READ);
@@ -52,10 +52,10 @@ root_check()
     printf("isolating the program from all other files to prevent damage from malicious clients to your system ..!");
     printf("\n-----------------------------------------------------\n");
     printf("------------------!!!! WARNING !!!!------------------\n");
-    printf("-----------------------------------------------------\n\n\n\n\n");
-    printf("ATFTP Server will now quit\n");
+    printf("-----------------------------------------------------\n\n");
+    printf("ATFTP Server will switch to a safe uid automatically after binding to the port you provided\n\n\n\n");
     fflush(stdout);
-    return -1;
+    return 0;
   }
 
   return 0;
@@ -122,19 +122,20 @@ main(int argc, char *argv[])
   }
   else if ( strcmp(ARG_READ, argv[1]) == 0 )
   {
-      if ( checkVars(argc, argv[3], argv[4]) )
-          return EXIT_FAILURE;
+      if ( checkVars(argc, argv[3], argv[4]) ) return EXIT_FAILURE;
+
       clientMode(READ, argv[2], argv[3], argv[4]);
   }
   else if ( strcmp(ARG_WRITE, argv[1]) == 0 )
   {
-      if ( checkVars(argc, argv[3], argv[4]) )
-          return EXIT_FAILURE;
+      if ( checkVars(argc, argv[3], argv[4]) ) return EXIT_FAILURE;
+
       clientMode(WRITE, argv[2], argv[3], argv[4]);
   }
   else if ( strcmp(ARG_START_SERVR, argv[1]) == 0 )
   {
       if ( root_check()==-1 ) { return(0); }
+
       serverMode(argv[2] == NULL ? 0 : atoi(argv[2]));
   }
   else
