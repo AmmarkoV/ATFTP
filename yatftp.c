@@ -211,7 +211,7 @@ main(int argc, char *argv[])
   }
   if ( mode == SERVER_MODE )
       server(port);
-  else // if (mode == CLIENT_MODE)
+  else if (mode == CLIENT_MODE)
       client(operation, filename, address, port);
   return EXIT_SUCCESS;
 }
