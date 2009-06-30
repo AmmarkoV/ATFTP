@@ -38,27 +38,32 @@ usage()
   printf("atftp %s [port] \t- begin tftp server binded @ port (default #port 69)\n", ARG_START_SERVR);
 }
 
+void
+root_warn()
+{
+  fprintf(stderr, "\n\n\n\n-----------------------------------------------------\n"
+          "------------------!!!! WARNING !!!!------------------\n"
+          "-----------------------------------------------------\n\n"
+          "Due to the unsecure nature of the TFTP protocol it is a VERY "
+          "bad idea to run the ATFTP server from a root account , the safest way to "
+          "run atftp server is to create a new user named tftp_service, and thus "
+          "isolating the program from all other files to prevent damage from "
+          "malicious clients to your system ..!\n"
+          "------------------!!!! WARNING !!!!------------------\n"
+          "-----------------------------------------------------\n\n"
+          "ATFTP Server will switch to a safe uid automatically "
+          "after binding to the port you provided\n\n\n\n");
+  fflush(stderr);
+}
+
 int
 root_check()
-{ 
-  //TODO ADD CODE edw gia na kanei check an o xristis pou trexei to programma einai root
-  // se periptwsi pou einai tote emfanizetai minima k epistrefetai -1
-  if (getuid()==0)
+{
+  if ( getuid() == ROOT_ID )
   {
-    printf("\n\n\n\n-----------------------------------------------------\n");
-    printf("------------------!!!! WARNING !!!!------------------\n");
-    printf("-----------------------------------------------------\n\n");
-    printf("Due to the unsecure nature of the TFTP protocol it is a VERY bad idea to run the ATFTP server from a root account , ");
-    printf("the safest way to run atftp server is to create a new user named tftp_service ( or something like that ) , and thus ");
-    printf("isolating the program from all other files to prevent damage from malicious clients to your system ..!");
-    printf("\n-----------------------------------------------------\n");
-    printf("------------------!!!! WARNING !!!!------------------\n");
-    printf("-----------------------------------------------------\n\n");
-    printf("ATFTP Server will switch to a safe uid automatically after binding to the port you provided\n\n\n\n");
-    fflush(stdout);
-    return 0;
+      root_warn();
+      return 0;
   }
-
   return 0;
 }
 
@@ -135,7 +140,10 @@ main(int argc, char *argv[])
   }
   else if ( strcmp(ARG_START_SERVR, argv[1]) == 0 )
   {
-      if ( root_check()==-1 ) { return(0); }
+      if ( root_check() == -1 )
+      {
+          return (0);
+      }
 
       serverMode(argv[2] == NULL ? 0 : atoi(argv[2]));
   }
