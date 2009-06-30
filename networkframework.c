@@ -24,19 +24,19 @@
  * GENERIC FUNCTIONS PART *
  * ********************** */
 
-int inline
+inline int
 trivial_msg()
 {
   return verbosity > 2;
 }
 
-int inline
+inline int
 debug_msg()
 {
   return verbosity > 1;
 }
 
-int inline
+inline int
 error_msg()
 {
   return verbosity > 0;
@@ -53,7 +53,7 @@ error(char *msg)
   exit(EXIT_SUCCESS);
 }
 
-void inline
+inline void
 clear_error()
 {
   errno = 0;
@@ -220,7 +220,7 @@ TransmitError(char * message, unsigned short errorcode, int sock, struct sockadd
   if ( debug_msg() )
       fprintf(outstrm, "\n Transmitting error message `%s` ( code %i ) to %s:%u \n", message, errorcode, inet_ntoa(peer->sin_addr), ntohs(peer->sin_port));
   // ERROR TFTP PACKET ASSEMBLY! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  struct ERROR_TFTP_PACKET error = { 0 };
+  struct ERROR_TFTP_PACKET error;
   //          2 bytes     2 bytes               1byte
   // ERROR   | opcode |  errorcode  |   MSG  |    0
   //               A          B         C         D
@@ -235,7 +235,7 @@ TransmitError(char * message, unsigned short errorcode, int sock, struct sockadd
   error.data[strlen(message)] = 0;
   // ERROR TFTP PACKET ASSEMBLY COMPLETE! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
   error.ErrorCode = htons(error.ErrorCode); // METATREPOUME SE NETWORK BYTE ORDER
-  unsigned int n = sendto(sock, (const char*) & error, strlen(message) + 4, 0, (struct sockaddr *) & peer, sizeof (struct sockaddr_in));
+  int n = sendto(sock, (const char*) & error, strlen(message) + 4, 0, (struct sockaddr *) & peer, sizeof (struct sockaddr_in));
   error.ErrorCode = ntohs(error.ErrorCode); // EPISTREFOUME STO DIKO MAS BYTE ORDER
   if ( n < 0 )
   {
@@ -244,7 +244,7 @@ TransmitError(char * message, unsigned short errorcode, int sock, struct sockadd
       printerror(errno);
       return EXIT_FAILURE;
   }
-  else if ( n < strlen(message) + 4 )
+  else if ( n < (int) strlen(message) + 4 )
   {
       if ( error_msg() )
           fprintf(outstrm, "Failed to transmit complete error message! , no retries \n ");
@@ -516,7 +516,7 @@ ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cli
               request.data[datarecv - 4] = 0;
           }
 
-          if ( datarecv<sizeof (request) )
+          if ( datarecv < (int) sizeof (request) )
           {
               reachedend = 1;
               if ( debug_msg() )
@@ -591,8 +591,7 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
       exit(EXIT_SUCCESS);
   }
   //SET TIMEOUT FOR OPERTATIONS
-  struct timeval timeout_time = { 0 };
-  timeout_time.tv_sec = 20;
+  struct timeval timeout_time = { ZERO, MAX_WAIT };
   int reslt = setsockopt(clsock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
   if ( reslt != 0 )
   {
@@ -698,10 +697,10 @@ TFTPServer(unsigned int port)
   }
   fromlen = sizeof (struct sockaddr_in);
   char filename[512];
-  unsigned int fork_res, packeterror = 0;
+  int fork_res, packeterror = 0;
   while (1)
   {
-      struct TFTP_PACKET request = { 0 };
+      struct TFTP_PACKET request;
       if ( debug_msg() )
           fprintf(outstrm, "\n Waiting for a tftp client \n");
       n = recvfrom(sock, (char*) & request, sizeof (request), 0, (struct sockaddr *) & from, &fromlen);
@@ -804,8 +803,7 @@ TFTPClient(char * server_ip, unsigned port, const char * filename, const int ope
       printerror(errno);
       exit(EXIT_SUCCESS);
   }
-  struct timeval timeout_time = { 0 };
-  timeout_time.tv_sec = 20;
+  struct timeval timeout_time = { 0, MAX_WAIT };
   int reslt = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
   if ( reslt != 0 )
   {

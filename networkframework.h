@@ -25,22 +25,21 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include <strings.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/uio.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
 #include <regex.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 #define _PNAME "yatftp"
 #define ROOT_ID 0
 #define MINDATAPORT 30000
 #define MAXDATAPORT 337000
 #define MAX_FAILED_RETRIES 10
+#define MAX_WAIT 20
 #define DEF_SERV_PORT 69
 #define DEF_LOG_FILE "tftp.log"
 #define ADDRESS_PATTERN "^\\([0-9]\\{1,3\\}\\.\\)\\{3\\}[0-9]\\{1,3\\}$"
@@ -59,7 +58,7 @@
 
 enum values
 {
-  READ = 1, WRITE, SERVER_MODE, CLIENT_MODE,
+  ZERO, READ, WRITE, SERVER_MODE, CLIENT_MODE,
 };
 
 struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
