@@ -290,7 +290,7 @@ TransmitError(char * message, unsigned short errorcode, int sock, struct sockadd
       printerror(errno);
   }
   else
-      if ( n < strlen(message) + 4 )
+      if ( n < (int) strlen(message) + 4 )
   {
       if ( error_msg() ) printf("Failed to transmit complete error message! , no retries \n ");
   }
@@ -540,7 +540,7 @@ ReceiveTFTPFile(char * filename, int server_sock, struct sockaddr_in * client_po
               request.data[datarecv - 4] = 0;
           }
 
-          if ( datarecv<sizeof (request) )
+          if ( datarecv < (int) sizeof (request) )
           {
               reachedend = 1;
               if ( debug_msg() ) printf("This should be the last packet \n");
@@ -615,9 +615,8 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
       exit(0);
   }
   //SET TIMEOUT FOR OPERTATIONS
-  struct timeval timeout_time; // = { 0, MAX_WAIT };
-  timeout_time.tv_usec = 0;
-  timeout_time.tv_sec = MAX_WAIT;
+  struct timeval timeout_time = { 0, MAX_WAIT };
+  //timeout_time.tv_sec = MAX_WAIT;
 
   int i = setsockopt(clsock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *) & timeout_time, sizeof ( struct timeval));
   if ( i != 0 )
