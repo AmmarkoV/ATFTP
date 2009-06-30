@@ -28,7 +28,8 @@ void
 usage()
 {
   printf("-----------------------------------------------------\n");
-  printf("A-TFTP 0.20 stable branch - for code \t git://github.com/AmmarkoV/ATFTP.git   \n");
+  printf("A-TFTP 0.21 stable branch - for code \t git://github.com/AmmarkoV/ATFTP.git   \n");
+  printf("aueb 1/07/09 \n");
   printf("-----------------------------------------------------\n");
   printf("Usage for TFTP client : \n");
   printf("atftp %s filename address port \t- read filename from address @ port \n", ARG_READ);
