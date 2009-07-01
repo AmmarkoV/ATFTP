@@ -30,8 +30,8 @@ usage()
   fprintf(stderr,
           "\n----------------------------------------------------------------------\n"
           "YATFTP 0.20 - for code see link @ git://github.com/AmmarkoV/ATFTP.git\n"
-          "----------------------------------------------------------------------\n");
-  fprintf(stderr, "\nUsage for TFTP client : \n"
+          "----------------------------------------------------------------------\n"
+          "\nUsage for TFTP client : \n"
           "%s -%c -%c filename -%c address -%c port :\t "
           "read filename from address @ port \n",
           _PNAME, READ_OPT, FILE_OPT, ADDRESS_OPT, PORT_OPT);
@@ -49,6 +49,7 @@ usage()
           SILENT_OPT, VERBOSE_OPT, DEBUG_OPT);
 }
 
+/* match the given expression int the defined pattern */
 int
 matchexpr(const char* expression, const char* pattern)
 {
@@ -60,6 +61,7 @@ matchexpr(const char* expression, const char* pattern)
   return status;
 }
 
+/* print error when user has mixed server and client options */
 int
 mixerr()
 {
@@ -68,12 +70,14 @@ mixerr()
   return EXIT_FAILURE;
 }
 
+/* print error when the argument is wrong for the given option */
 void
 argerr(char option, char* expr)
 {
   fprintf(stderr, "%s: Wrong argument for -%c option: %s\n", _PNAME, option, expr);
 }
 
+/* start client operation */
 void
 client(const int operation, const char* filename, char* address, int port)
 {
@@ -81,6 +85,7 @@ client(const int operation, const char* filename, char* address, int port)
   TFTPClient(address, port, filename, operation);
 }
 
+/* start server operation */
 void
 server(unsigned servr_port)
 {
@@ -88,11 +93,11 @@ server(unsigned servr_port)
   TFTPServer(servr_port);
 }
 
+/* this is when the program starts, lol wtf !? :P */
 int
 main(int argc, char *argv[])
 {
   extern char *optarg;
-  outstrm = stdout;
   int opt, mode, operation, port = DEF_SERV_PORT,
           rdflg = 0, wrflg = 0, addrflg = 1, flflg = 1;
   char *filename, *address, options[] = { SERVR_OPT, READ_OPT, WRITE_OPT,
@@ -100,23 +105,33 @@ main(int argc, char *argv[])
                                          ADDRESS_OPT, NEED_ARG, VERBOSE_OPT,
                                          FILE_OPT, NEED_ARG, DEBUG_OPT,
                                          SILENT_OPT, '\0' };
-  /* check no arguments */
+  /* default output stream is stdout,
+   * unless -l option is selected,
+   * then we switch to a logfile */
+  outstrm = stdout;
+  /* check if no arguments present */
   if ( argc < 2 )
   {
       usage();
       return EXIT_FAILURE;
   }
+  /* do not print getargs() error messages */
+  /* opterr = 0; */
   /* read arguments and set initial values */
-  /* opterr = 0; /* do not print getargs() error messages */
   while ((opt = getopt(argc, argv, options)) != -1)
   {
       switch (opt)
       {
+              /* read the option
+               * check the flags
+               * if invalid print error and exit
+               * else set the flags properly */
           case SERVR_OPT:
               if ( (wrflg | rdflg) || mode == CLIENT_MODE )
                   return mixerr();
               mode = SERVER_MODE;
-              flflg = addrflg = 0; /* we don't a filename, nor an address */
+              /* we don't a filename, nor an address */
+              flflg = addrflg = 0;
               break;
           case READ_OPT:
               if ( mode == SERVER_MODE )
@@ -211,7 +226,7 @@ main(int argc, char *argv[])
   }
   if ( mode == SERVER_MODE )
       server(port);
-  else if (mode == CLIENT_MODE)
+  else if ( mode == CLIENT_MODE )
       client(operation, filename, address, port);
   return EXIT_SUCCESS;
 }

@@ -61,27 +61,31 @@ enum values
   ZERO, READ, WRITE, SERVER_MODE, CLIENT_MODE,
 };
 
-struct TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
+/* XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI */
+struct TFTP_PACKET
 {
   unsigned char Op1, Op2;
   char data[514];
 };
 
-struct DATA_TFTP_PACKET //  <- GIA DATA PAKETA 
+/* GIA DATA PAKETA */
+struct DATA_TFTP_PACKET
 {
   unsigned char Op1, Op2;
   unsigned short Block;
   char data[512];
 };
 
-struct ACK_TFTP_PACKET //  <- GIA ACKNOWLEDGMENT PAKETA 
+/*  GIA ACKNOWLEDGMENT PAKETA */
+struct ACK_TFTP_PACKET
 {
   unsigned char Op1, Op2;
   unsigned short Block;
   char data[512];
 };
 
-struct ERROR_TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI
+/* XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI EINAI */
+struct ERROR_TFTP_PACKET
 {
   unsigned char Op1, Op2;
   unsigned short ErrorCode;
@@ -94,9 +98,7 @@ struct ERROR_TFTP_PACKET //  <- XWRAEI OPOIODIPOTE ALLO PAKETO AN DN KSEROUME TI
  * 2 +Status Messages,
  * 3 +Trivial Debug messages */
 unsigned short verbosity;
+/* where to send output */
 FILE *outstrm;
-
-int TFTPServer(unsigned int port);
-int TFTPClient(char * server, unsigned port, const char * filename, const int operation);
 
 #endif
