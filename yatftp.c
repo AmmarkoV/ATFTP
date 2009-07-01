@@ -93,7 +93,7 @@ server(unsigned servr_port)
   TFTPServer(servr_port);
 }
 
-/* this is when the program starts, lol wtf !? :P */
+/* this is where the program starts, lol, wtf !? :P */
 int
 main(int argc, char *argv[])
 {

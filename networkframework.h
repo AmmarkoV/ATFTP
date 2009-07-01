@@ -36,6 +36,7 @@
 
 #define _PNAME "yatftp"
 #define ROOT_ID 0
+#define USER_ID 1000
 #define MINDATAPORT 30000
 #define MAXDATAPORT 337000
 #define MAX_FAILED_RETRIES 10

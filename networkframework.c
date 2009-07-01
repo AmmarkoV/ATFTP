@@ -51,14 +51,14 @@ error(char *msg)
   {
       exit(EXIT_SUCCESS);
   }
-  perror(msg);
+  perror(strcat("ERROR: ", msg));
   exit(EXIT_SUCCESS);
 }
 
 /* clear the errno var, to update it later
  * we do not care about all errors */
 inline void
-clear_error()
+clrerrno()
 {
   errno = 0;
 }
@@ -105,7 +105,7 @@ printerror(int errnum)
 int
 fcheck(const char* filename)
 {
-  return access(filename, F_OK) | access(filename, R_OK);
+  return access(filename, F_OK) & access(filename, R_OK);
 }
 
 int
@@ -139,7 +139,7 @@ OpCodeValidTFTP(unsigned char op1, unsigned char op2)
           default:
               return EXIT_FAILURE;
               break;
-      };
+      }
   }
   return EXIT_SUCCESS;
 }
@@ -147,7 +147,7 @@ OpCodeValidTFTP(unsigned char op1, unsigned char op2)
 int
 ReceiveNullACK(int server_sock, struct sockaddr_in * client_sock, int client_length)
 {
-  clear_error();
+  clrerrno();
   /* MAKE ACK TFTP PACKET! */
   struct ACK_TFTP_PACKET ackpacket;
   /*          2 bytes  2 bytes
@@ -276,7 +276,7 @@ TransmitError(char * message, unsigned short errorcode, int sock, struct sockadd
 int
 FindFreePortInRange(int thesock, struct sockaddr_in* server)
 {
-  clear_error();
+  clrerrno();
   unsigned int cl_port = MINDATAPORT;
   int bindres = 0, length = sizeof (struct sockaddr_in);
   while (cl_port <= MAXDATAPORT)
@@ -303,14 +303,14 @@ FindFreePortInRange(int thesock, struct sockaddr_in* server)
       cl_port = 0;
   }
   /* ignore bind errors */
-  clear_error();
+  clrerrno();
   return cl_port;
 }
 
 int
 TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * client_pout_sock, int client_length)
 {
-  clear_error();
+  clrerrno();
   struct sockaddr_in client_send_sockaddr;
   client_send_sockaddr = *client_pout_sock;
   if ( debug_msg() )
@@ -476,7 +476,7 @@ TransmitTFTPFile(const char * filename, int server_sock, struct sockaddr_in * cl
 int
 ReceiveTFTPFile(const char * filename, int server_sock, struct sockaddr_in * client_pout_sock, int client_length)
 {
-  clear_error();
+  clrerrno();
   struct sockaddr_in client_send_sockaddr;
   client_send_sockaddr = *client_pout_sock;
   if ( debug_msg() )
@@ -685,7 +685,7 @@ HandleClient(unsigned char * filename, int froml, struct sockaddr_in fromsock, i
       ackpacket.Block = 0;
       /* MAKE TFTP PACKET! */
       froml = sizeof (struct sockaddr_in); // <- KAKO DN KANEI :P
-      clear_error();
+      clrerrno();
       if ( debug_msg() )
           fprintf(outstrm, "Trying to send null ack to address %s port %u\n",
                   inet_ntoa(fromsock.sin_addr), ntohs(fromsock.sin_port));
@@ -726,12 +726,11 @@ TFTPServer(unsigned int port)
   if ( debug_msg() )
       fprintf(outstrm, "TFTPServer\n");
   int sock, length, fromlen, n;
-  struct sockaddr_in server;
-  struct sockaddr_in from;
+  struct sockaddr_in server, from;
 
   sock = socket(AF_INET, SOCK_DGRAM, 0);
   if ( sock < 0 )
-      error("Opening socket");
+      error("Opening socket\n");
 
   length = sizeof (server);
   bzero(&server, length);
@@ -741,7 +740,7 @@ TFTPServer(unsigned int port)
 
   if ( bind(sock, (struct sockaddr *) & server, length) < 0 )
   {
-      error("binding master port for yatftp!");
+      error("binding master port for yatftp!\n");
   }
   fromlen = sizeof (struct sockaddr_in);
   char filename[512];
@@ -753,8 +752,7 @@ TFTPServer(unsigned int port)
           fprintf(outstrm, "\n Waiting for a tftp client \n");
       n = recvfrom(sock, (char*) & request, sizeof (request), 0, (struct sockaddr *) & from, &fromlen);
       if ( n < 0 )
-          error("recvfrom");
-      packeterror = 0;
+          error("recvfrom\n");
       /* DISASSEMBLE TFTP PACKET! */
       /*           2 bytes             1 byte         1byte
        * RRQ/WRQ | opcode | filename  |  0  |  Mode  |  0
@@ -773,18 +771,18 @@ TFTPServer(unsigned int port)
       if ( !fcheck(filename) )
       {
           packeterror = 1;
-          fprintf(outstrm, "Insecure filename string.. , failing packet \n");
-          TransmitError("Insecure filename ", 2, sock, &from);
+          fprintf(outstrm, "Cannot access file %s, failing packet \n", filename);
+          TransmitError("Cannot access file", 2, sock, &from);
       }
       else if ( fnm_end == 0 )
       {
           packeterror = 1;
           if ( error_msg() )
-              fprintf(outstrm, "Null filename.. , failing packet \n");
-          TransmitError("Null filename ", 3, sock, &from);
+              fprintf(outstrm, "Null filename (%s) , failing packet \n", filename);
+          TransmitError("Null filename", 3, sock, &from);
       }
       /* DISASSEMBLE TFTP PACKET! */
-      if ( packeterror == 0 )
+      if ( !packeterror )
       {
           fork_res = fork();
           if ( fork_res < 0 )
@@ -804,7 +802,7 @@ TFTPServer(unsigned int port)
               /* check if root */
               if ( getuid() == ROOT_ID )
               {
-                  setuid(1000);
+                  setuid(USER_ID);
                   fprintf(outstrm, "Switched from root(uid=%d) to normal user(uid=%d)\n",
                           ROOT_ID, getuid());
               }
@@ -884,7 +882,7 @@ TFTPClient(char * server_ip, unsigned port, const char * filename, const int ope
   hp = gethostbyname(server_ip);
   if ( hp == 0 )
   {
-      error("Unknown host for TFTP connection ");
+      error("Unknown host for TFTP connection\n");
   }
   bcopy((char *) hp->h_addr, (char *) & server.sin_addr, hp->h_length);
 
