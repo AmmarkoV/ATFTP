@@ -24,30 +24,32 @@
 
 #include "networkframework.h"
 
+// usage func {{{
 void
 usage()
 {
   fprintf(stderr,
-          "\n----------------------------------------------------------------------\n"
-          "YATFTP 0.20 - for code see link @ git://github.com/AmmarkoV/ATFTP.git\n"
-          "----------------------------------------------------------------------\n"
-          "\nUsage for TFTP client : \n"
-          "%s -%c -%c filename -%c address -%c port :\t "
-          "read filename from address @ port \n",
+          "\n------------------------------------------------------------------"
+          "\nYATFTP 0.20 - get source @ git://github.com/AmmarkoV/ATFTP.git"
+          "\n------------------------------------------------------------------\n"
+          "\nUsage for TFTP client : "
+          "\n %s -%c -%c filename -%c address -%c port :\t "
+          "read filename from address @ port ",
           _PNAME, READ_OPT, FILE_OPT, ADDRESS_OPT, PORT_OPT);
-  fprintf(stderr, "%s -%c -%c filename -%c address -%c port :\t "
+  fprintf(stderr, "\n %s -%c -%c filename -%c address -%c port :\t "
           "write filename to address @ port \n",
           _PNAME, WRITE_OPT, FILE_OPT, ADDRESS_OPT, PORT_OPT);
-  fprintf(stderr, "\nUsage for TFTP server : \n"
-          "%s -%c [-%c port] :\t "
+  fprintf(stderr, "\nUsage for TFTP server : "
+          "\n %s -%c [-%c port]  :\t "
           "begin tftp server binded @ port (default #port %d)\n",
           _PNAME, SERVR_OPT, PORT_OPT, DEF_SERV_PORT);
-  fprintf(stderr, "\nCommon Options : \n"
-          "-%c :\t log output to file %s\n", LOG_OPT, DEF_LOG_FILE);
-  fprintf(stderr, "-%c :\t silent mode, don't print any output\n"
-          "-%c :\t use verbose output\n-%c :\t use debug output\n",
-          SILENT_OPT, VERBOSE_OPT, DEBUG_OPT);
-}
+  fprintf(stderr, "\nCommon Options : "
+          "\n -%c :\t log output to file %s"
+          "\n -%c :\t silent mode, don't print any output"
+          "\n -%c :\t use verbose output"
+          "\n -%c :\t use debug output\n",
+          LOG_OPT, DEF_LOG_FILE, SILENT_OPT, VERBOSE_OPT, DEBUG_OPT);
+} // }}}
 
 /* match the given expression int the defined pattern */
 int
@@ -61,7 +63,7 @@ matchexpr(const char* expression, const char* pattern)
   return status;
 }
 
-/* print error when user has mixed server and client options */
+/* print error when user has mixed server and client flags */
 int
 mixerr()
 {
@@ -89,7 +91,7 @@ client(const int operation, const char* filename, char* address, int port)
 void
 server(unsigned servr_port)
 {
-  fprintf(outstrm, "Starting TFTP Server at port %u .. \n\n", servr_port);
+  fprintf(outstrm, "Starting TFTP Server using port %u .. \n\n", servr_port);
   TFTPServer(servr_port);
 }
 
@@ -98,36 +100,39 @@ int
 main(int argc, char *argv[])
 {
   extern char *optarg;
-  int opt, mode, operation, port = DEF_SERV_PORT,
-          rdflg = 0, wrflg = 0, addrflg = 1, flflg = 1;
-  char *filename, *address, options[] = { SERVR_OPT, READ_OPT, WRITE_OPT,
-                                         PORT_OPT, NEED_ARG, LOG_OPT,
-                                         ADDRESS_OPT, NEED_ARG, VERBOSE_OPT,
-                                         FILE_OPT, NEED_ARG, DEBUG_OPT,
-                                         SILENT_OPT, '\0' };
+  int opt, mode, operation, port = DEF_SERV_PORT, 
+      rdflg = 0, wrflg = 0, addrflg = 1, flflg = 1;
+  char *filename, *address, options[] = { SERVR_OPT, READ_OPT, WRITE_OPT, 
+      PORT_OPT, NEED_ARG, LOG_OPT, ADDRESS_OPT, NEED_ARG, VERBOSE_OPT, 
+      FILE_OPT, NEED_ARG, DEBUG_OPT, SILENT_OPT, '\0' };
+  
   /* default output stream is stdout,
    * unless -l option is selected,
    * then we switch to a logfile */
   outstrm = stdout;
+  
   /* check if no arguments present */
   if ( argc < 2 )
   {
       usage();
       return EXIT_FAILURE;
   }
+  
   /* do not print getargs() error messages */
   /* opterr = 0; */
+  
   /* read arguments and set initial values */
   while ((opt = getopt(argc, argv, options)) != -1)
   {
+      /* read the option
+       * check the flags
+       * if invalid print error and exit
+       * else set the flags properly 
+       * */
       switch (opt)
       {
-              /* read the option
-               * check the flags
-               * if invalid print error and exit
-               * else set the flags properly */
           case SERVR_OPT:
-              if ( (wrflg | rdflg) || mode == CLIENT_MODE )
+              if ( (wrflg | rdflg) || mode == CLIENT_MODE ) 
                   return mixerr();
               mode = SERVER_MODE;
               /* we don't a filename, nor an address */
@@ -230,3 +235,6 @@ main(int argc, char *argv[])
       client(operation, filename, address, port);
   return EXIT_SUCCESS;
 }
+
+// vim:foldmethod=marker:foldmarker={{{,}}}:foldlevel=0
+
